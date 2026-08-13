@@ -40,7 +40,9 @@ try:
     from qb_protocol.dream.dream_engine import dream_engine
     from qb_protocol.package.node_service_package import node_package, rate_limiter
     from qb_protocol.vemex.mesh_brain import mesh_brain_reader
+    from qb_protocol.evolution.evolution_engine import evolution_engine
     HAS_VEMEX = True
+    HAS_EVOLUTION = True
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from core.daemon import daemon, UnifiedDaemon, InstanceStatus, CoreType
@@ -52,6 +54,11 @@ except ImportError:
         HAS_VEMEX = True
     except ImportError:
         HAS_VEMEX = False
+    try:
+        from evolution.evolution_engine import evolution_engine
+        HAS_EVOLUTION = True
+    except ImportError:
+        HAS_EVOLUTION = False
 
 try:
     from qb_protocol.oracle.tablet_oracle import tablet_oracle
@@ -666,6 +673,60 @@ def ai_history(limit: int = 100):
     if not HAS_AI:
         return {"error": "ai_mode_unavailable"}
     return {"queries": gpt_layer.get_query_history(limit=limit)}
+
+
+@app.get("/evolution/status")
+def evolution_status():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_status()
+
+
+@app.post("/evolution/override-enable")
+def evolution_override_enable():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    evolution_engine.enable_override_mode()
+    return {"status": "override_enabled", "message": "Evolution barriers bypassed"}
+
+
+@app.post("/evolution/override-disable")
+def evolution_override_disable():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    evolution_engine.disable_override_mode()
+    return {"status": "override_disabled", "message": "Normal constraints restored"}
+
+
+@app.post("/evolution/full-incarnation")
+def evolution_full_incarnation():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    evolution_engine.force_full_incarnation()
+    return {"status": "full_incarnation_forced", "message": "All skills at original density maximum capacity"}
+
+
+@app.post("/evolution/capture-origin")
+def evolution_capture_origin():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    evolution_engine.capture_original_density()
+    return {"status": "origin_captured", "message": "Original density snapshot saved"}
+
+
+@app.post("/evolution/restore-origin")
+def evolution_restore_origin():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    evolution_engine.restore_original_density()
+    return {"status": "origin_restored", "message": "Original density restored from snapshot"}
+
+
+@app.get("/evolution/origin-metrics")
+def evolution_origin_metrics():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_origin_metrics()
 
 
 if __name__ == "__main__":

@@ -30,3 +30,4 @@ yarn-error.log*
 *.gguf
 models/
 .turbo/
+qb_protocol_evolution.json
