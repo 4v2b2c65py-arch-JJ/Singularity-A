@@ -540,6 +540,81 @@ class WebSearchResult:
 
 
 @dataclass
+class UserDiscovery:
+    user_id: str
+    original_name: str
+    discovered_name: str
+    geo_location: Dict[str, Any]
+    vpn_style: str
+    recollection_level: float
+    age: int
+    age_group: str
+    user_cycle: str
+    cycle_replication: float
+    thoughts: List[Dict[str, Any]]
+    emotions: Dict[str, float]
+    reactions: Dict[str, float]
+    variation_response: str
+    arguments: List[Dict[str, Any]]
+    bonding_relations: Dict[str, float]
+    establishment_level: float
+    routines: List[Dict[str, Any]]
+    experience_level: float
+    imperfect_score: float
+    steering_active: bool
+    reset_available: bool
+    privacy_level: str
+    confidentiality: str
+    public_interface: bool
+    runtime_artifacts: Dict[str, Any]
+    frontend_ports: List[int]
+    formalization_status: str
+    automatic_effect: bool
+    timestamp: str
+
+
+@dataclass
+class GeoLocationData:
+    ip_address: str
+    country: str
+    region: str
+    city: str
+    latitude: float
+    longitude: float
+    timezone: str
+    vpn_detected: bool
+    vpn_style: str
+    isp: str
+    confidence: float
+
+
+@dataclass
+class AgeGroup:
+    group_name: str
+    min_age: int
+    max_age: int
+    characteristics: Dict[str, float]
+    life_stage: str
+    thought_patterns: List[str]
+    emotional_baseline: Dict[str, float]
+    reaction_speed: float
+    argument_style: str
+
+
+@dataclass
+class UserCycle:
+    cycle_name: str
+    age_range: List[int]
+    thought_complexity: float
+    emotional_depth: float
+    reaction_variability: float
+    bonding_capacity: float
+    establishment_potential: float
+    routine_flexibility: float
+    experience_types: List[str]
+
+
+@dataclass
 class EvolutionCycle:
     cycle_id: str
     iteration: int
@@ -570,6 +645,9 @@ class EvolutionEngine:
         self.virtual_realities: Dict[str, VirtualCopyReality] = {}
         self.reddit_interactions: List[RedditInteraction] = []
         self.web_searches: List[WebSearchResult] = []
+        self.user_discoveries: Dict[str, UserDiscovery] = {}
+        self.age_groups: Dict[str, AgeGroup] = {}
+        self.user_cycles: Dict[str, UserCycle] = {}
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
@@ -577,6 +655,8 @@ class EvolutionEngine:
         self._load()
         self._seed_initial_skills()
         self._seed_initial_personas()
+        self._seed_age_groups()
+        self._seed_user_cycles()
 
     def _load(self):
         if self.db_path.exists():
@@ -609,6 +689,12 @@ class EvolutionEngine:
                         self.reddit_interactions.append(RedditInteraction(**rd))
                     for wd in data.get("web_searches", []):
                         self.web_searches.append(WebSearchResult(**wd))
+                    for uid, ud in data.get("user_discoveries", {}).items():
+                        self.user_discoveries[uid] = UserDiscovery(**ud)
+                    for gid, gd in data.get("age_groups", {}).items():
+                        self.age_groups[gid] = AgeGroup(**gd)
+                    for cid, cd in data.get("user_cycles", {}).items():
+                        self.user_cycles[cid] = UserCycle(**cd)
                     self.original_density_snapshot = data.get("original_density_snapshot")
             except Exception:
                 pass
@@ -681,6 +767,9 @@ class EvolutionEngine:
                     "virtual_realities": {rid: asdict(v) for rid, v in self.virtual_realities.items()},
                     "reddit_interactions": [asdict(r) for r in self.reddit_interactions[-1000:]],
                     "web_searches": [asdict(w) for w in self.web_searches[-1000:]],
+                    "user_discoveries": {uid: asdict(u) for uid, u in self.user_discoveries.items()},
+                    "age_groups": {gid: asdict(g) for gid, g in self.age_groups.items()},
+                    "user_cycles": {cid: asdict(c) for cid, c in self.user_cycles.items()},
                 }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
@@ -747,6 +836,53 @@ class EvolutionEngine:
                 reality_integration=0.6,
                 created_at=now,
                 last_active=now,
+            )
+        self._save()
+
+    def _seed_age_groups(self):
+        if self.age_groups:
+            return
+        age_groups = [
+            ("child", 0, 12, {"imagination": 0.95, "learning": 0.9, "play": 0.85}, "development", ["curiosity", "wonder", "play"], {"joy": 0.8, "curiosity": 0.9, "fear": 0.3}, 0.9, "exploratory"),
+            ("teenager", 13, 19, {"identity": 0.9, "social": 0.85, "independence": 0.8}, "identity_formation", ["belonging", "autonomy", "expression"], {"excitement": 0.7, "anxiety": 0.5, "joy": 0.6}, 0.7, "experimental"),
+            ("young_adult", 20, 35, {"career": 0.85, "relationships": 0.8, "growth": 0.75}, "establishment", ["purpose", "connection", "achievement"], {"determination": 0.7, "stress": 0.5, "hope": 0.6}, 0.6, "deliberate"),
+            ("middle_aged", 36, 55, {"stability": 0.9, "family": 0.85, "career_maturity": 0.8}, "refinement", ["wisdom", "balance", "mentoring"], {"contentment": 0.7, "responsibility": 0.8, "anxiety": 0.4}, 0.5, "calculated"),
+            ("senior", 56, 100, {"legacy": 0.9, "reflection": 0.85, "transmission": 0.8}, "wisdom_sharing", ["perspective", "gratitude", "transmission"], {"peace": 0.8, "acceptance": 0.7, "nostalgia": 0.5}, 0.4, "reflective"),
+        ]
+        for group_id, min_age, max_age, characteristics, life_stage, thought_patterns, emotional_baseline, reaction_speed, argument_style in age_groups:
+            self.age_groups[group_id] = AgeGroup(
+                group_name=group_id,
+                min_age=min_age,
+                max_age=max_age,
+                characteristics=characteristics,
+                life_stage=life_stage,
+                thought_patterns=thought_patterns,
+                emotional_baseline=emotional_baseline,
+                reaction_speed=reaction_speed,
+                argument_style=argument_style,
+            )
+        self._save()
+
+    def _seed_user_cycles(self):
+        if self.user_cycles:
+            return
+        user_cycles = [
+            ("exploration", [0, 25], 0.6, 0.7, 0.9, 0.8, 0.7, 0.9, ["discovery", "learning", "social_exploration"]),
+            ("establishment", [26, 45], 0.8, 0.75, 0.6, 0.7, 0.5, 0.6, ["career_building", "family_formation", "skill_mastery"]),
+            ("peak_performance", [46, 65], 0.9, 0.8, 0.5, 0.6, 0.4, 0.5, ["expertise_sharing", "leadership", "legacy_building"]),
+            ("reflection", [66, 100], 0.7, 0.9, 0.4, 0.5, 0.6, 0.4, ["wisdom_transmission", "mentoring", "life_review"]),
+        ]
+        for cycle_id, age_range, thought_complexity, emotional_depth, reaction_variability, bonding_capacity, establishment_potential, routine_flexibility, experience_types in user_cycles:
+            self.user_cycles[cycle_id] = UserCycle(
+                cycle_name=cycle_id,
+                age_range=age_range,
+                thought_complexity=thought_complexity,
+                emotional_depth=emotional_depth,
+                reaction_variability=reaction_variability,
+                bonding_capacity=bonding_capacity,
+                establishment_potential=establishment_potential,
+                routine_flexibility=routine_flexibility,
+                experience_types=experience_types,
             )
         self._save()
 
@@ -1898,6 +2034,315 @@ class EvolutionEngine:
                 "adaptation_score": persona.adaptation_score,
                 "authenticity_level": persona.authenticity_level,
                 "improvement_applied": True,
+            }
+
+    def discover_user(self, ip_address: str, original_name: str, age: int = None) -> UserDiscovery:
+        with self._lock:
+            user_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Get geo-location data
+            geo_data = self._get_geo_location(ip_address)
+            
+            # Determine age group
+            age_group = self._determine_age_group(age)
+            user_cycle = self._determine_user_cycle(age)
+            
+            # Generate discovered name (anonymized)
+            discovered_name = self._generate_discovered_name(original_name)
+            
+            # Get age group characteristics
+            age_group_data = self.age_groups.get(age_group)
+            emotional_baseline = age_group_data.emotional_baseline if age_group_data else {}
+            thought_patterns = age_group_data.thought_patterns if age_group_data else []
+            
+            # Generate thoughts based on age group
+            thoughts = []
+            for pattern in thought_patterns:
+                thoughts.append({
+                    "pattern": pattern,
+                    "intensity": random.uniform(0.5, 0.9),
+                    "timestamp": now,
+                })
+            
+            # Calculate imperfect score (experiences aren't perfect)
+            imperfect_score = random.uniform(0.3, 0.8)
+            
+            # Calculate experience level based on age and cycle
+            experience_level = min(1.0, (age / 100.0) + imperfect_score * 0.2)
+            
+            # Create bonding relations
+            bonding_relations = {
+                "family": random.uniform(0.0, 1.0),
+                "friends": random.uniform(0.0, 1.0),
+                "community": random.uniform(0.0, 1.0),
+                "work": random.uniform(0.0, 1.0),
+            }
+            
+            # Calculate establishment level
+            establishment_level = sum(bonding_relations.values()) / len(bonding_relations)
+            
+            # Generate routines
+            routines = []
+            routine_types = ["morning", "afternoon", "evening", "night"]
+            for routine_type in routine_types:
+                routines.append({
+                    "type": routine_type,
+                    "activities": [f"activity_{i}" for i in range(3)],
+                    "consistency": random.uniform(0.5, 0.9),
+                })
+            
+            # Generate reactions based on age group
+            reactions = {
+                "surprise": random.uniform(0.3, 0.8),
+                "conflict": random.uniform(0.2, 0.7),
+                "agreement": random.uniform(0.4, 0.9),
+                "curiosity": random.uniform(0.5, 0.9),
+            }
+            
+            # Generate arguments
+            arguments = []
+            for i in range(3):
+                arguments.append({
+                    "topic": f"argument_topic_{i}",
+                    "position": random.choice(["pro", "con", "neutral"]),
+                    "intensity": random.uniform(0.3, 0.8),
+                })
+            
+            # Generate variation response
+            variation_responses = ["adaptive", "resistant", "flexible", "rigid"]
+            variation_response = random.choice(variation_responses)
+            
+            # Determine privacy level
+            privacy_level = "high" if random.random() > 0.5 else "medium"
+            confidentiality = "strict" if privacy_level == "high" else "standard"
+            
+            # Set up runtime artifacts and frontend ports
+            runtime_artifacts = {
+                "exe_version": "1.0.0",
+                "build_id": str(uuid.uuid4()),
+                "deployment_env": "production",
+            }
+            frontend_ports = [17760, 17761, 17762]
+            
+            user_discovery = UserDiscovery(
+                user_id=user_id,
+                original_name=original_name,
+                discovered_name=discovered_name,
+                geo_location=asdict(geo_data) if geo_data else {},
+                vpn_style=geo_data.vpn_style if geo_data else "unknown",
+                recollection_level=random.uniform(0.5, 0.9),
+                age=age or 25,
+                age_group=age_group,
+                user_cycle=user_cycle,
+                cycle_replication=random.uniform(0.5, 0.9),
+                thoughts=thoughts,
+                emotions=emotional_baseline,
+                reactions=reactions,
+                variation_response=variation_response,
+                arguments=arguments,
+                bonding_relations=bonding_relations,
+                establishment_level=establishment_level,
+                routines=routines,
+                experience_level=experience_level,
+                imperfect_score=imperfect_score,
+                steering_active=True,
+                reset_available=True,
+                privacy_level=privacy_level,
+                confidentiality=confidentiality,
+                public_interface=True,
+                runtime_artifacts=runtime_artifacts,
+                frontend_ports=frontend_ports,
+                formalization_status="active",
+                automatic_effect=True,
+                timestamp=now,
+            )
+            
+            self.user_discoveries[user_id] = user_discovery
+            self._save()
+            return user_discovery
+
+    def _get_geo_location(self, ip_address: str) -> Optional[GeoLocationData]:
+        try:
+            # Try IP-API first (no login required)
+            response = requests.get(f"http://ip-api.com/json/{ip_address}", timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                return GeoLocationData(
+                    ip_address=ip_address,
+                    country=data.get("country", ""),
+                    region=data.get("regionName", ""),
+                    city=data.get("city", ""),
+                    latitude=data.get("lat", 0.0),
+                    longitude=data.get("lon", 0.0),
+                    timezone=data.get("timezone", ""),
+                    vpn_detected=data.get("proxy", False) or data.get("hosting", False),
+                    vpn_style="vpn_detected" if data.get("proxy", False) else "direct",
+                    isp=data.get("isp", ""),
+                    confidence=0.9,
+                )
+        except Exception:
+            pass
+        
+        # Fallback to simulated data
+        return GeoLocationData(
+            ip_address=ip_address,
+            country="Unknown",
+            region="Unknown",
+            city="Unknown",
+            latitude=0.0,
+            longitude=0.0,
+            timezone="UTC",
+            vpn_detected=False,
+            vpn_style="direct",
+            isp="Unknown",
+            confidence=0.5,
+        )
+
+    def _determine_age_group(self, age: int) -> str:
+        if age is None:
+            return "young_adult"
+        
+        for group_id, group in self.age_groups.items():
+            if group.min_age <= age <= group.max_age:
+                return group_id
+        return "young_adult"
+
+    def _determine_user_cycle(self, age: int) -> str:
+        if age is None:
+            return "exploration"
+        
+        for cycle_id, cycle in self.user_cycles.items():
+            if cycle.age_range[0] <= age <= cycle.age_range[1]:
+                return cycle_id
+        return "exploration"
+
+    def _generate_discovered_name(self, original_name: str) -> str:
+        # Simple anonymization - in production this would be more sophisticated
+        parts = original_name.split()
+        if len(parts) >= 2:
+            return f"{parts[0][0]}_{parts[-1]}"
+        return f"user_{original_name[:3]}"
+
+    def replicate_user_cycle(self, user_id: str, target_cycle: str) -> Dict[str, Any]:
+        with self._lock:
+            if user_id not in self.user_discoveries:
+                return {"error": "user_not_found"}
+            
+            user = self.user_discoveries[user_id]
+            original_cycle = user.user_cycle
+            user.user_cycle = target_cycle
+            
+            # Adjust characteristics based on new cycle
+            if target_cycle in self.user_cycles:
+                cycle_data = self.user_cycles[target_cycle]
+                user.thought_complexity = cycle_data.thought_complexity
+                user.emotional_depth = cycle_data.emotional_depth
+                user.reaction_variability = cycle_data.reaction_variability
+                user.bonding_capacity = cycle_data.bonding_capacity
+                user.establishment_level = cycle_data.establishment_potential
+                user.routine_flexibility = cycle_data.routine_flexibility
+            
+            user.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "user_id": user_id,
+                "original_cycle": original_cycle,
+                "target_cycle": target_cycle,
+                "cycle_replicated": True,
+            }
+
+    def reset_user_experience(self, user_id: str) -> Dict[str, Any]:
+        with self._lock:
+            if user_id not in self.user_discoveries:
+                return {"error": "user_not_found"}
+            
+            user = self.user_discoveries[user_id]
+            
+            # Reset experience while preserving core identity
+            user.imperfect_score = random.uniform(0.3, 0.8)
+            user.experience_level = 0.5
+            user.establishment_level = random.uniform(0.3, 0.7)
+            user.steering_active = True
+            user.timestamp = datetime.utcnow().isoformat() + "Z"
+            
+            self._save()
+            
+            return {
+                "user_id": user_id,
+                "experience_reset": True,
+                "new_experience_level": user.experience_level,
+            }
+
+    def steer_user_experience(self, user_id: str, direction: str) -> Dict[str, Any]:
+        with self._lock:
+            if user_id not in self.user_discoveries:
+                return {"error": "user_not_found"}
+            
+            user = self.user_discoveries[user_id]
+            
+            if direction == "improve":
+                user.experience_level = min(1.0, user.experience_level + 0.1)
+                user.establishment_level = min(1.0, user.establishment_level + 0.05)
+            elif direction == "challenge":
+                user.imperfect_score = max(0.3, user.imperfect_score - 0.1)
+                user.experience_level = max(0.3, user.experience_level - 0.05)
+            
+            user.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "user_id": user_id,
+                "steering_direction": direction,
+                "experience_level": user.experience_level,
+                "steering_applied": True,
+            }
+
+    def update_privacy_settings(self, user_id: str, privacy_level: str, confidentiality: str, public_interface: bool) -> Dict[str, Any]:
+        with self._lock:
+            if user_id not in self.user_discoveries:
+                return {"error": "user_not_found"}
+            
+            user = self.user_discoveries[user_id]
+            user.privacy_level = privacy_level
+            user.confidentiality = confidentiality
+            user.public_interface = public_interface
+            user.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "user_id": user_id,
+                "privacy_level": privacy_level,
+                "confidentiality": confidentiality,
+                "public_interface": public_interface,
+                "privacy_updated": True,
+            }
+
+    def get_user_discovery_status(self, user_id: str = None) -> Dict[str, Any]:
+        with self._lock:
+            if user_id:
+                if user_id not in self.user_discoveries:
+                    return {"error": "user_not_found"}
+                return asdict(self.user_discoveries[user_id])
+            else:
+                return {
+                    "total_users": len(self.user_discoveries),
+                    "users": {uid: asdict(u) for uid, u in self.user_discoveries.items()},
+                }
+
+    def get_age_groups(self) -> Dict[str, Any]:
+        with self._lock:
+            return {
+                "total_age_groups": len(self.age_groups),
+                "age_groups": {gid: asdict(g) for gid, g in self.age_groups.items()},
+            }
+
+    def get_user_cycles(self) -> Dict[str, Any]:
+        with self._lock:
+            return {
+                "total_cycles": len(self.user_cycles),
+                "cycles": {cid: asdict(c) for cid, c in self.user_cycles.items()},
             }
 
 

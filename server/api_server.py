@@ -257,6 +257,33 @@ class PersonaImprovementRequest(BaseModel):
     improvement_factor: float = 0.1
 
 
+class UserDiscoveryRequest(BaseModel):
+    ip_address: str
+    original_name: str
+    age: Optional[int] = None
+
+
+class UserCycleReplicationRequest(BaseModel):
+    user_id: str
+    target_cycle: str
+
+
+class UserExperienceResetRequest(BaseModel):
+    user_id: str
+
+
+class UserSteeringRequest(BaseModel):
+    user_id: str
+    direction: str
+
+
+class PrivacySettingsRequest(BaseModel):
+    user_id: str
+    privacy_level: str
+    confidentiality: str
+    public_interface: bool
+
+
 class IPSelfHealingSystem:
     def __init__(self):
         self.healing_history: List[Dict[str, Any]] = []
@@ -1057,6 +1084,70 @@ def evolution_persona_improvement(body: PersonaImprovementRequest):
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.improve_persona_adaptation(body.persona_id, body.improvement_factor)
+
+
+@app.post("/evolution/user-discovery")
+def evolution_user_discovery(body: UserDiscoveryRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.discover_user(body.ip_address, body.original_name, body.age)
+    return asdict(result)
+
+
+@app.post("/evolution/user-cycle-replication")
+def evolution_user_cycle_replication(body: UserCycleReplicationRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.replicate_user_cycle(body.user_id, body.target_cycle)
+
+
+@app.post("/evolution/user-experience-reset")
+def evolution_user_experience_reset(body: UserExperienceResetRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.reset_user_experience(body.user_id)
+
+
+@app.post("/evolution/user-steering")
+def evolution_user_steering(body: UserSteeringRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.steer_user_experience(body.user_id, body.direction)
+
+
+@app.post("/evolution/privacy-settings")
+def evolution_privacy_settings(body: PrivacySettingsRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.update_privacy_settings(body.user_id, body.privacy_level, body.confidentiality, body.public_interface)
+
+
+@app.get("/evolution/user-discovery-status/{user_id}")
+def evolution_user_discovery_status(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_user_discovery_status(user_id)
+
+
+@app.get("/evolution/all-users")
+def evolution_all_users():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_user_discovery_status()
+
+
+@app.get("/evolution/age-groups")
+def evolution_age_groups():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_age_groups()
+
+
+@app.get("/evolution/user-cycles")
+def evolution_user_cycles():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_user_cycles()
 
 
 if __name__ == "__main__":
