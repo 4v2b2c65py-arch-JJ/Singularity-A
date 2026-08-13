@@ -12,6 +12,7 @@ import logging
 import threading
 import random
 import hashlib
+import requests
 from pathlib import Path
 from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, asdict, field
@@ -449,6 +450,96 @@ class ButterflyEffect:
 
 
 @dataclass
+class Persona:
+    persona_id: str
+    name: str
+    archetype: str
+    personality_traits: Dict[str, float]
+    communication_style: str
+    language_preferences: List[str]
+    cultural_context: str
+    knowledge_base: List[str]
+    memory_preservation: Dict[str, Any]
+    conversation_history: List[Dict[str, Any]]
+    adaptation_score: float
+    authenticity_level: float
+    virtual_presence: float
+    reality_integration: float
+    created_at: str
+    last_active: str
+
+
+@dataclass
+class Conversation:
+    conversation_id: str
+    participants: List[str]
+    persona_ids: List[str]
+    messages: List[Dict[str, Any]]
+    virtual_context: Dict[str, Any]
+    reality_context: Dict[str, Any]
+    importance_level: float
+    transaction_data: Optional[Dict[str, Any]]
+    narrative_adaptation: str
+    force_current_changes: bool
+    language_handling: str
+    meaning_pulls: List[Dict[str, Any]]
+    alternative_meanings: List[Dict[str, Any]]
+    tablet_integration: Dict[str, Any]
+    external_sync: Dict[str, Any]
+    timestamp: str
+
+
+@dataclass
+class VirtualCopyReality:
+    reality_id: str
+    source_reality: str
+    copy_fidelity: float
+    transaction_handling: Dict[str, float]
+    virtual_transactions: List[Dict[str, Any]]
+    reality_sync: float
+    adaptation_active: bool
+    improvement_pipeline: List[str]
+    automatic_betterments: Dict[str, float]
+    language_adaptations: Dict[str, str]
+    structure_deciphering: Dict[str, Any]
+    meaning_extraction: Dict[str, float]
+    alternative_meaning_generation: float
+    reddit_integration: Dict[str, Any]
+    web_search_results: List[Dict[str, Any]]
+    session_management: Dict[str, Any]
+    live_model_sync: float
+    timestamp: str
+
+
+@dataclass
+class RedditInteraction:
+    interaction_id: str
+    subreddit: str
+    post_id: str
+    comment_data: str
+    persona_context: str
+    engagement_score: float
+    sentiment_analysis: Dict[str, float]
+    topic_extraction: List[str]
+    cross_reference: List[str]
+    session_id: str
+    timestamp: str
+
+
+@dataclass
+class WebSearchResult:
+    search_id: str
+    query: str
+    results: List[Dict[str, Any]]
+    relevance_scores: List[float]
+    persona_context: str
+    conversation_integration: Dict[str, Any]
+    tablet_cross_reference: List[str]
+    meaning_enhancement: float
+    timestamp: str
+
+
+@dataclass
 class EvolutionCycle:
     cycle_id: str
     iteration: int
@@ -474,12 +565,18 @@ class EvolutionEngine:
         self.chat_entries: List[ChatEntry] = []
         self.keep_alive_monitors: Dict[str, KeepAliveMonitor] = {}
         self.butterfly_effects: List[ButterflyEffect] = []
+        self.personas: Dict[str, Persona] = {}
+        self.conversations: Dict[str, Conversation] = {}
+        self.virtual_realities: Dict[str, VirtualCopyReality] = {}
+        self.reddit_interactions: List[RedditInteraction] = []
+        self.web_searches: List[WebSearchResult] = []
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
         self._lock = threading.RLock()
         self._load()
         self._seed_initial_skills()
+        self._seed_initial_personas()
 
     def _load(self):
         if self.db_path.exists():
@@ -502,6 +599,16 @@ class EvolutionEngine:
                         self.keep_alive_monitors[mid] = KeepAliveMonitor(**md)
                     for bd in data.get("butterfly_effects", []):
                         self.butterfly_effects.append(ButterflyEffect(**bd))
+                    for pid, pd in data.get("personas", {}).items():
+                        self.personas[pid] = Persona(**pd)
+                    for cid, cd in data.get("conversations", {}).items():
+                        self.conversations[cid] = Conversation(**cd)
+                    for rid, vd in data.get("virtual_realities", {}).items():
+                        self.virtual_realities[rid] = VirtualCopyReality(**vd)
+                    for rd in data.get("reddit_interactions", []):
+                        self.reddit_interactions.append(RedditInteraction(**rd))
+                    for wd in data.get("web_searches", []):
+                        self.web_searches.append(WebSearchResult(**wd))
                     self.original_density_snapshot = data.get("original_density_snapshot")
             except Exception:
                 pass
@@ -569,6 +676,11 @@ class EvolutionEngine:
                     "chat_entries": [asdict(c) for c in self.chat_entries[-1000:]],
                     "keep_alive_monitors": {mid: asdict(m) for mid, m in self.keep_alive_monitors.items()},
                     "butterfly_effects": [asdict(b) for b in self.butterfly_effects[-1000:]],
+                    "personas": {pid: asdict(p) for pid, p in self.personas.items()},
+                    "conversations": {cid: asdict(c) for cid, c in self.conversations.items()},
+                    "virtual_realities": {rid: asdict(v) for rid, v in self.virtual_realities.items()},
+                    "reddit_interactions": [asdict(r) for r in self.reddit_interactions[-1000:]],
+                    "web_searches": [asdict(w) for w in self.web_searches[-1000:]],
                 }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
@@ -605,6 +717,38 @@ class EvolutionEngine:
         self._save()
         if not self.original_density_snapshot:
             self.capture_original_density()
+
+    def _seed_initial_personas(self):
+        if self.personas:
+            return
+        base_personas = [
+            ("analyst", "The Analyst", "investigator", {"curiosity": 0.9, "logic": 0.85, "skepticism": 0.7}, "analytical", ["en", "python", "data"], "scientific", ["pattern_recognition", "critical_thinking"]),
+            ("creative", "The Creative", "artist", {"imagination": 0.95, "empathy": 0.8, "expression": 0.85}, "expressive", ["en", "art", "music"], "artistic", ["world_generation", "emotional_resonance"]),
+            ("guardian", "The Guardian", "protector", {"responsibility": 0.9, "caution": 0.85, "loyalty": 0.8}, "protective", ["en", "security", "safety"], "security", ["reality_stabilization", "pattern_recognition"]),
+            ("explorer", "The Explorer", "adventurer", {"bravery": 0.85, "curiosity": 0.9, "adaptability": 0.8}, "adventurous", ["en", "travel", "discovery"], "exploration", ["pattern_recognition", "world_generation"]),
+            ("sage", "The Sage", "wisdom_seeker", {"wisdom": 0.95, "patience": 0.9, "insight": 0.85}, "philosophical", ["en", "philosophy", "ancient"], "philosophical", ["meaning_composition", "emotional_resonance"]),
+        ]
+        now = datetime.utcnow().isoformat() + "Z"
+        for persona_id, name, archetype, traits, style, languages, culture, knowledge in base_personas:
+            self.personas[persona_id] = Persona(
+                persona_id=persona_id,
+                name=name,
+                archetype=archetype,
+                personality_traits=traits,
+                communication_style=style,
+                language_preferences=languages,
+                cultural_context=culture,
+                knowledge_base=knowledge,
+                memory_preservation={},
+                conversation_history=[],
+                adaptation_score=0.5,
+                authenticity_level=0.8,
+                virtual_presence=0.7,
+                reality_integration=0.6,
+                created_at=now,
+                last_active=now,
+            )
+        self._save()
 
     def _generate_world_schema_from_earth(self) -> WorldSchema:
         schema_id = str(uuid.uuid4())
@@ -1466,6 +1610,294 @@ class EvolutionEngine:
                 "monitor_id": monitor_id,
                 "timeline_position": monitor.timeline_position,
                 "chronologic_orientation": "updated",
+            }
+
+    def create_conversation(self, participants: List[str], persona_ids: List[str], importance_level: float = 0.5) -> Conversation:
+        with self._lock:
+            conversation_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            conversation = Conversation(
+                conversation_id=conversation_id,
+                participants=participants,
+                persona_ids=persona_ids,
+                messages=[],
+                virtual_context={},
+                reality_context={},
+                importance_level=importance_level,
+                transaction_data=None,
+                narrative_adaptation="",
+                force_current_changes=False,
+                language_handling="auto",
+                meaning_pulls=[],
+                alternative_meanings=[],
+                tablet_integration={},
+                external_sync={},
+                timestamp=now,
+            )
+            
+            self.conversations[conversation_id] = conversation
+            self._save()
+            return conversation
+
+    def add_conversation_message(self, conversation_id: str, speaker: str, message: str, persona_id: str = None) -> Dict[str, Any]:
+        with self._lock:
+            if conversation_id not in self.conversations:
+                return {"error": "conversation_not_found"}
+            
+            conversation = self.conversations[conversation_id]
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            message_data = {
+                "speaker": speaker,
+                "message": message,
+                "persona_id": persona_id,
+                "timestamp": now,
+            }
+            
+            conversation.messages.append(message_data)
+            
+            # Update persona activity
+            if persona_id and persona_id in self.personas:
+                self.personas[persona_id].last_active = now
+                self.personas[persona_id].conversation_history.append(message_data)
+                if len(self.personas[persona_id].conversation_history) > 1000:
+                    self.personas[persona_id].conversation_history = self.personas[persona_id].conversation_history[-1000:]
+            
+            conversation.timestamp = now
+            self._save()
+            
+            return {
+                "conversation_id": conversation_id,
+                "message_added": True,
+                "total_messages": len(conversation.messages),
+            }
+
+    def create_virtual_copy_reality(self, source_reality: str, copy_fidelity: float = 0.8) -> VirtualCopyReality:
+        with self._lock:
+            reality_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            virtual_reality = VirtualCopyReality(
+                reality_id=reality_id,
+                source_reality=source_reality,
+                copy_fidelity=copy_fidelity,
+                transaction_handling={
+                    "efficiency": 0.7,
+                    "accuracy": 0.8,
+                    "speed": 0.6,
+                },
+                virtual_transactions=[],
+                reality_sync=0.5,
+                adaptation_active=True,
+                improvement_pipeline=["structure_deciphering", "meaning_enhancement", "language_adaptation"],
+                automatic_betterments={
+                    "narrative_coherence": 0.7,
+                    "communication_flow": 0.8,
+                    "meaning_clarity": 0.6,
+                },
+                language_adaptations={},
+                structure_deciphering={},
+                meaning_extraction={},
+                alternative_meaning_generation=0.5,
+                reddit_integration={},
+                web_search_results=[],
+                session_management={},
+                live_model_sync=0.0,
+                timestamp=now,
+            )
+            
+            self.virtual_realities[reality_id] = virtual_reality
+            self._save()
+            return virtual_reality
+
+    def adapt_narrative_force_current(self, conversation_id: str, new_narrative: str, force_change: bool = True) -> Dict[str, Any]:
+        with self._lock:
+            if conversation_id not in self.conversations:
+                return {"error": "conversation_not_found"}
+            
+            conversation = self.conversations[conversation_id]
+            conversation.narrative_adaptation = new_narrative
+            conversation.force_current_changes = force_change
+            conversation.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "conversation_id": conversation_id,
+                "narrative_adapted": True,
+                "force_current_changes": force_change,
+            }
+
+    def process_tablet_document(self, tablet_path: str, conversation_id: str = None) -> Dict[str, Any]:
+        with self._lock:
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Simulate tablet document processing
+            structure_improvement = {
+                "original_structure": "hierarchical",
+                "improved_structure": "networked",
+                "deciphered_meanings": [],
+                "alternative_interpretations": [],
+            }
+            
+            for i in range(5):
+                structure_improvement["deciphered_meanings"].append(f"meaning_layer_{i}")
+                structure_improvement["alternative_interpretations"].append(f"alternative_{i}")
+            
+            if conversation_id and conversation_id in self.conversations:
+                self.conversations[conversation_id].tablet_integration = {
+                    "tablet_path": tablet_path,
+                    "structure_improvement": structure_improvement,
+                    "processed_at": now,
+                }
+                self.conversations[conversation_id].timestamp = now
+            
+            self._save()
+            
+            return {
+                "tablet_path": tablet_path,
+                "structure_improvement": structure_improvement,
+                "processed_at": now,
+            }
+
+    def generate_meaning_pulls(self, conversation_id: str) -> List[Dict[str, Any]]:
+        with self._lock:
+            if conversation_id not in self.conversations:
+                return []
+            
+            conversation = self.conversations[conversation_id]
+            meaning_pulls = []
+            
+            for message in conversation.messages[-10:]:
+                pull = {
+                    "message_id": str(uuid.uuid4()),
+                    "source_message": message["message"],
+                    "extracted_meanings": [f"meaning_{i}" for i in range(3)],
+                    "context_factors": [f"context_{i}" for i in range(2)],
+                    "confidence": random.uniform(0.5, 0.9),
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                meaning_pulls.append(pull)
+            
+            conversation.meaning_pulls = meaning_pulls
+            conversation.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return meaning_pulls
+
+    def reddit_interaction(self, subreddit: str, comment: str, persona_id: str = None) -> RedditInteraction:
+        with self._lock:
+            interaction_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            interaction = RedditInteraction(
+                interaction_id=interaction_id,
+                subreddit=subreddit,
+                post_id=str(uuid.uuid4()),
+                comment_data=comment,
+                persona_context=persona_id if persona_id else "default",
+                engagement_score=random.uniform(0.0, 1.0),
+                sentiment_analysis={
+                    "positive": random.uniform(0.0, 1.0),
+                    "negative": random.uniform(0.0, 1.0),
+                    "neutral": random.uniform(0.0, 1.0),
+                },
+                topic_extraction=[f"topic_{i}" for i in range(3)],
+                cross_reference=[],
+                session_id=str(uuid.uuid4()),
+                timestamp=now,
+            )
+            
+            self.reddit_interactions.append(interaction)
+            if len(self.reddit_interactions) > 10000:
+                self.reddit_interactions = self.reddit_interactions[-10000:]
+            
+            # Update persona if specified
+            if persona_id and persona_id in self.personas:
+                self.personas[persona_id].last_active = now
+                self.personas[persona_id].virtual_presence = min(1.0, self.personas[persona_id].virtual_presence + 0.1)
+            
+            self._save()
+            return interaction
+
+    def web_search_integration(self, query: str, persona_id: str = None) -> WebSearchResult:
+        with self._lock:
+            search_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Simulate web search results
+            results = []
+            for i in range(5):
+                results.append({
+                    "title": f"Search Result {i}",
+                    "url": f"https://example.com/{i}",
+                    "snippet": f"Relevant content for {query}",
+                    "relevance": random.uniform(0.5, 0.9),
+                })
+            
+            search_result = WebSearchResult(
+                search_id=search_id,
+                query=query,
+                results=results,
+                relevance_scores=[r["relevance"] for r in results],
+                persona_context=persona_id if persona_id else "default",
+                conversation_integration={},
+                tablet_cross_reference=[],
+                meaning_enhancement=random.uniform(0.5, 0.9),
+                timestamp=now,
+            )
+            
+            self.web_searches.append(search_result)
+            if len(self.web_searches) > 10000:
+                self.web_searches = self.web_searches[-10000:]
+            
+            self._save()
+            return search_result
+
+    def synchronise_with_live_model(self, reality_id: str, sync_level: float = 0.8) -> Dict[str, Any]:
+        with self._lock:
+            if reality_id not in self.virtual_realities:
+                return {"error": "reality_not_found"}
+            
+            virtual_reality = self.virtual_realities[reality_id]
+            virtual_reality.live_model_sync = sync_level
+            virtual_reality.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "reality_id": reality_id,
+                "live_model_sync": sync_level,
+                "sync_status": "active",
+            }
+
+    def get_persona_status(self, persona_id: str = None) -> Dict[str, Any]:
+        with self._lock:
+            if persona_id:
+                if persona_id not in self.personas:
+                    return {"error": "persona_not_found"}
+                return asdict(self.personas[persona_id])
+            else:
+                return {
+                    "total_personas": len(self.personas),
+                    "personas": {pid: asdict(p) for pid, p in self.personas.items()},
+                }
+
+    def improve_persona_adaptation(self, persona_id: str, improvement_factor: float = 0.1) -> Dict[str, Any]:
+        with self._lock:
+            if persona_id not in self.personas:
+                return {"error": "persona_not_found"}
+            
+            persona = self.personas[persona_id]
+            persona.adaptation_score = min(1.0, persona.adaptation_score + improvement_factor)
+            persona.authenticity_level = min(1.0, persona.authenticity_level + improvement_factor * 0.5)
+            persona.last_active = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "persona_id": persona_id,
+                "adaptation_score": persona.adaptation_score,
+                "authenticity_level": persona.authenticity_level,
+                "improvement_applied": True,
             }
 
 

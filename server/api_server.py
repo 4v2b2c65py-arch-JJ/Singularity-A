@@ -212,6 +212,51 @@ class ChronologicTimelineRequest(BaseModel):
     velocity: float
 
 
+class ConversationRequest(BaseModel):
+    participants: List[str]
+    persona_ids: List[str]
+    importance_level: float = 0.5
+
+
+class MessageRequest(BaseModel):
+    conversation_id: str
+    speaker: str
+    message: str
+    persona_id: Optional[str] = None
+
+
+class VirtualRealityRequest(BaseModel):
+    source_reality: str
+    copy_fidelity: float = 0.8
+
+
+class NarrativeAdaptationRequest(BaseModel):
+    conversation_id: str
+    new_narrative: str
+    force_change: bool = True
+
+
+class TabletProcessingRequest(BaseModel):
+    tablet_path: str
+    conversation_id: Optional[str] = None
+
+
+class RedditInteractionRequest(BaseModel):
+    subreddit: str
+    comment: str
+    persona_id: Optional[str] = None
+
+
+class WebSearchRequest(BaseModel):
+    query: str
+    persona_id: Optional[str] = None
+
+
+class PersonaImprovementRequest(BaseModel):
+    persona_id: str
+    improvement_factor: float = 0.1
+
+
 class IPSelfHealingSystem:
     def __init__(self):
         self.healing_history: List[Dict[str, Any]] = []
@@ -924,6 +969,94 @@ def evolution_chronologic_timeline(body: ChronologicTimelineRequest):
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.chronologic_timeline_orientate(body.monitor_id, body.timeline_position, body.velocity)
+
+
+@app.post("/evolution/conversation")
+def evolution_conversation(body: ConversationRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_conversation(body.participants, body.persona_ids, body.importance_level)
+    return asdict(result)
+
+
+@app.post("/evolution/conversation-message")
+def evolution_conversation_message(body: MessageRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.add_conversation_message(body.conversation_id, body.speaker, body.message, body.persona_id)
+
+
+@app.post("/evolution/virtual-reality")
+def evolution_virtual_reality(body: VirtualRealityRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_virtual_copy_reality(body.source_reality, body.copy_fidelity)
+    return asdict(result)
+
+
+@app.post("/evolution/narrative-adaptation")
+def evolution_narrative_adaptation(body: NarrativeAdaptationRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.adapt_narrative_force_current(body.conversation_id, body.new_narrative, body.force_change)
+
+
+@app.post("/evolution/tablet-processing")
+def evolution_tablet_processing(body: TabletProcessingRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.process_tablet_document(body.tablet_path, body.conversation_id)
+
+
+@app.get("/evolution/meaning-pulls/{conversation_id}")
+def evolution_meaning_pulls(conversation_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.generate_meaning_pulls(conversation_id)
+
+
+@app.post("/evolution/reddit-interaction")
+def evolution_reddit_interaction(body: RedditInteractionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.reddit_interaction(body.subreddit, body.comment, body.persona_id)
+    return asdict(result)
+
+
+@app.post("/evolution/web-search")
+def evolution_web_search(body: WebSearchRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.web_search_integration(body.query, body.persona_id)
+    return asdict(result)
+
+
+@app.post("/evolution/live-model-sync/{reality_id}")
+def evolution_live_model_sync(reality_id: str, sync_level: float = 0.8):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.synchronise_with_live_model(reality_id, sync_level)
+
+
+@app.get("/evolution/persona-status/{persona_id}")
+def evolution_persona_status(persona_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_persona_status(persona_id)
+
+
+@app.get("/evolution/all-personas")
+def evolution_all_personas():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_persona_status()
+
+
+@app.post("/evolution/persona-improvement")
+def evolution_persona_improvement(body: PersonaImprovementRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.improve_persona_adaptation(body.persona_id, body.improvement_factor)
 
 
 if __name__ == "__main__":
