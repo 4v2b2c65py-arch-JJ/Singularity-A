@@ -1,25 +1,14 @@
 {
-  "node_id": "1161741f-7b3b-4d81-88a7-0def2f9b4b92",
+  "node_id": "982984db-3365-4d59-8a69-be578454d8de",
   "instances": {},
   "cores": {},
   "dream_layers": [],
   "vemex_engine_loaded": true,
-  "vemex_reading_count": 1,
-  "vemex_latest_reading": {
-    "reading_id": "b9d1421e-9e2b-4536-bd2f-b09873ba3b2f",
-    "node_id": "1161741f-7b3b-4d81-88a7-0def2f9b4b92",
-    "uptime_seconds": 4.696311712265015,
-    "consciousness_state": "active",
-    "formula_count": 40,
-    "spatial_nodes": 0,
-    "resonance": 0.0,
-    "coherence": 0.0,
-    "entropy": 0.0,
-    "timestamp": "2026-08-13T16:24:38.498034Z"
-  },
+  "vemex_reading_count": 0,
+  "vemex_latest_reading": null,
   "oracle_consciousness": false,
   "oracle_escape_bridge": true,
   "oracle_brain_mesh": true,
   "oracle_reading_count": 0,
-  "updated_at": "2026-08-13T16:24:40.399607Z"
+  "updated_at": "2026-08-13T19:28:28.137117Z"
 }

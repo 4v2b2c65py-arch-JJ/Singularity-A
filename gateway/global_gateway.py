@@ -16,6 +16,12 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, asdict
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -24,6 +30,7 @@ try:
     from qb_protocol.core.daemon import daemon
     from qb_protocol.agent.entry_gate import entry_gate
     from qb_protocol.agent.guest_session import guest_session_manager
+    from qb_protocol.ai.gpt_layer import gpt_layer
     from qb_protocol.package.node_service_package import node_package, rate_limiter
     from qb_protocol.server.api_server import (
         reality_stabilizer, dream_engine, healing_system, ip_geo
@@ -33,6 +40,7 @@ except ImportError:
     from core.daemon import daemon
     from agent.entry_gate import entry_gate
     from agent.guest_session import guest_session_manager
+    from ai.gpt_layer import gpt_layer
     from package.node_service_package import node_package, rate_limiter
     from server.api_server import (
         reality_stabilizer, dream_engine, healing_system, ip_geo
@@ -40,6 +48,11 @@ except ImportError:
 
 LOG = logging.getLogger("qb_protocol.gateway")
 GATEWAY_SECRET = os.environ.get("QB_GATEWAY_SECRET", "qb-global-gateway-secret")
+try:
+    from ai.gpt_layer import gpt_layer
+    HAS_AI = True
+except ImportError:
+    HAS_AI = False
 app = FastAPI(title="QB Protocol Global Gateway", version="1.0.0")
 
 
@@ -283,6 +296,35 @@ def guest_status():
 def guest_revoke(session_id: str, token: str):
     ok = guest_session_manager.revoke_session(session_id)
     return {"status": "ok" if ok else "not_found", "revoked": ok}
+
+
+class AIQueryRequest(BaseModel):
+    prompt: str
+    max_tokens: int = 256
+    temperature: float = 0.7
+
+
+@app.get("/ai/status")
+def ai_status():
+    if not HAS_AI:
+        return {"error": "ai_mode_unavailable"}
+    return gpt_layer.get_status()
+
+
+@app.post("/ai/query")
+def ai_query(body: AIQueryRequest):
+    if not HAS_AI:
+        return {"error": "ai_mode_unavailable"}
+    if not body.prompt:
+        raise HTTPException(status_code=400, detail="prompt_required")
+    return gpt_layer.query(body.prompt, max_tokens=body.max_tokens, temperature=body.temperature)
+
+
+@app.get("/ai/history")
+def ai_history(limit: int = 100):
+    if not HAS_AI:
+        return {"error": "ai_mode_unavailable"}
+    return {"queries": gpt_layer.get_query_history(limit=limit)}
 
 
 if __name__ == "__main__":

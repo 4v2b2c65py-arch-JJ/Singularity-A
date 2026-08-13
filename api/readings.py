@@ -3,6 +3,12 @@ import os
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 
 QB_STATE_FILE = Path(__file__).resolve().parent.parent / "qb_protocol_state.json"
 GUEST_DB_FILE = Path(__file__).resolve().parent.parent / "qb_protocol_guest_sessions.json"
@@ -151,6 +157,20 @@ def application(environ, start_response):
                 "session_id": post.get("session_id"),
                 "permissions": ["read_env", "read_status"],
             }
+        elif path == "/ai/status":
+            body = {
+                "deployment": "vercel",
+                "ai_enabled": os.environ.get("AI_MODE_ENABLED", "false").lower() == "true",
+                "model_loaded": False,
+                "model_path": os.environ.get("AI_MODEL_PATH", ""),
+                "provider": os.environ.get("AI_MODEL_PROVIDER", "local"),
+                "query_count": 0,
+            }
+        elif path == "/ai/history":
+            body = {
+                "deployment": "vercel",
+                "queries": [],
+            }
         else:
             body = {"error": "not_found", "path": path, "deployment": "vercel"}
             status = "404 Not Found"
@@ -174,6 +194,22 @@ def application(environ, start_response):
                 "session_id": post.get("session_id"),
                 "permissions": ["read_env", "read_status"],
             }
+        elif path == "/ai/query":
+            post = _read_post_body()
+            prompt = post.get("prompt", "")
+            if not prompt:
+                body = {"error": "prompt_required", "deployment": "vercel"}
+            else:
+                body = {
+                    "deployment": "vercel",
+                    "query_id": str(__import__('uuid').uuid4()),
+                    "prompt": prompt,
+                    "response": f"Simulated AI response to: {prompt[:100]}...",
+                    "model": "tinyllama-1.1b-chat-simulated",
+                    "provider": "simulated",
+                    "tokens_used": len(prompt.split()) + 10,
+                    "timestamp": __import__('datetime').datetime.utcnow().isoformat() + "Z",
+                }
         else:
             body = {"error": "not_found", "path": path, "deployment": "vercel"}
             status = "404 Not Found"

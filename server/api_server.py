@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 QB Protocol - Hosted API Server
-Self-feeding healing, regen, IP geolocation, monitoring, SDKs, mirror integration.
+Self-feeding healing, IP geolocation, monitoring, and mirror integration.
 """
 
 import os
@@ -18,6 +18,12 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from collections import defaultdict
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -46,16 +52,46 @@ except ImportError:
         HAS_VEMEX = True
     except ImportError:
         HAS_VEMEX = False
+
+try:
+    from qb_protocol.oracle.tablet_oracle import tablet_oracle
+    HAS_ORACLE = True
+except ImportError:
     try:
         from oracle.tablet_oracle import tablet_oracle
         HAS_ORACLE = True
     except ImportError:
         HAS_ORACLE = False
+
+try:
+    from qb_protocol.agent.guest_session import guest_session_manager
+    HAS_GUEST = True
+except ImportError:
     try:
         from agent.guest_session import guest_session_manager
         HAS_GUEST = True
     except ImportError:
         HAS_GUEST = False
+
+try:
+    from qb_protocol.ai.gpt_layer import gpt_layer
+    HAS_AI = True
+except ImportError:
+    try:
+        from ai.gpt_layer import gpt_layer
+        HAS_AI = True
+    except ImportError:
+        HAS_AI = False
+
+try:
+    from qb_protocol.agent.agentic_loop import agentic_loop
+    HAS_AGENTIC = True
+except ImportError:
+    try:
+        from agent.agentic_loop import agentic_loop
+        HAS_AGENTIC = True
+    except ImportError:
+        HAS_AGENTIC = False
 
 LOG = logging.getLogger("qb_protocol.api")
 QB_STATE_FILE = Path(__file__).resolve().parent.parent / "qb_protocol_state.json"
@@ -600,6 +636,36 @@ def guest_revoke(session_id: str, token: str):
         return {"error": "guest_sessions_unavailable"}
     ok = guest_session_manager.revoke_session(session_id)
     return {"status": "ok" if ok else "not_found", "revoked": ok}
+
+
+class AIQueryRequest(BaseModel):
+    prompt: str
+    max_tokens: int = 256
+    temperature: float = 0.7
+
+
+@app.get("/ai/status")
+def ai_status():
+    if not HAS_AI:
+        return {"error": "ai_mode_unavailable"}
+    return gpt_layer.get_status()
+
+
+@app.post("/ai/query")
+def ai_query(body: AIQueryRequest):
+    if not HAS_AI:
+        return {"error": "ai_mode_unavailable"}
+    if not body.prompt:
+        raise HTTPException(status_code=400, detail="prompt_required")
+    result = gpt_layer.query(body.prompt, max_tokens=body.max_tokens, temperature=body.temperature)
+    return result
+
+
+@app.get("/ai/history")
+def ai_history(limit: int = 100):
+    if not HAS_AI:
+        return {"error": "ai_mode_unavailable"}
+    return {"queries": gpt_layer.get_query_history(limit=limit)}
 
 
 if __name__ == "__main__":

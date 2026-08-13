@@ -1,0 +1,34 @@
+{
+  "sessions": {
+    "04768822-9aef-49a8-bdb1-aadaef1a476b": {
+      "session_id": "04768822-9aef-49a8-bdb1-aadaef1a476b",
+      "token": "e1ad6b1d33617f66f074727af7b6ec69",
+      "agent_id": "ai-remote",
+      "permissions": [
+        "read_env",
+        "read_status",
+        "ai_query"
+      ],
+      "issued_at": "2026-08-13T17:18:04.402398Z",
+      "expires_at": "2026-08-13T19:18:04.402424Z",
+      "last_heartbeat": "2026-08-13T17:18:04.402398Z",
+      "remote_server": "10.0.0.5",
+      "metadata": {}
+    },
+    "49b8ea28-39ce-4b9e-b74a-2eb517c6bb23": {
+      "session_id": "49b8ea28-39ce-4b9e-b74a-2eb517c6bb23",
+      "token": "dbabea07946f27d89171b07cd1f2f266",
+      "agent_id": "remote",
+      "permissions": [
+        "read_env",
+        "read_status",
+        "ai_query"
+      ],
+      "issued_at": "2026-08-13T19:28:00.150918Z",
+      "expires_at": "2026-08-13T20:28:00.150939Z",
+      "last_heartbeat": "2026-08-13T19:28:00.150918Z",
+      "remote_server": null,
+      "metadata": {}
+    }
+  }
+}
