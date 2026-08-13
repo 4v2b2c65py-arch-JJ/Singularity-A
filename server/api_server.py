@@ -201,6 +201,17 @@ class VideoRecordingRequest(BaseModel):
     active: bool
 
 
+class KeepAliveMonitorRequest(BaseModel):
+    monitor_id: str
+    heartbeat_interval: float = 60.0
+
+
+class ChronologicTimelineRequest(BaseModel):
+    monitor_id: str
+    timeline_position: float
+    velocity: float
+
+
 class IPSelfHealingSystem:
     def __init__(self):
         self.healing_history: List[Dict[str, Any]] = []
@@ -869,6 +880,50 @@ def evolution_video_recording(body: VideoRecordingRequest):
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.activate_video_recording(body.entry_id, body.active)
+
+
+@app.post("/evolution/keep-alive-monitor")
+def evolution_keep_alive_monitor(body: KeepAliveMonitorRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_keep_alive_monitor(body.monitor_id, body.heartbeat_interval)
+    return asdict(result)
+
+
+@app.get("/evolution/keep-alive-status/{monitor_id}")
+def evolution_keep_alive_status(monitor_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.check_keep_alive_status(monitor_id)
+
+
+@app.post("/evolution/butterfly-effect-restoration/{monitor_id}")
+def evolution_butterfly_effect_restoration(monitor_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.apply_butterfly_effect_restoration(monitor_id)
+    return asdict(result)
+
+
+@app.post("/evolution/update-heartbeat/{monitor_id}")
+def evolution_update_heartbeat(monitor_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.update_heartbeat(monitor_id)
+
+
+@app.get("/evolution/all-monitors-status")
+def evolution_all_monitors_status():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_all_monitors_status()
+
+
+@app.post("/evolution/chronologic-timeline")
+def evolution_chronologic_timeline(body: ChronologicTimelineRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.chronologic_timeline_orientate(body.monitor_id, body.timeline_position, body.velocity)
 
 
 if __name__ == "__main__":

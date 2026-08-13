@@ -347,6 +347,107 @@ class VisionManagement:
     replication_accuracy: float
 
 
+class LifecycleState(Enum):
+    ALIVE = "alive"
+    DEAD = "dead"
+    INACTIVE = "inactive"
+    SUSPENDED = "suspended"
+    INITIATIVE = "initiative"
+    TASK = "task"
+    RE_COMPREHEND = "re_comprehend"
+    MATERIALIZED = "materialized"
+    ARTIFACT = "artifact"
+    CAPTURED = "captured"
+    RE_ORDERED = "re_ordered"
+    MUTATED = "mutated"
+    PERFECTED = "perfected"
+    OBSERVED = "observed"
+    REACTED = "reacted"
+    COMPASSED = "compassed"
+    ARRANGED = "arranged"
+    AUTO = "auto"
+    INITIALIZED = "initialized"
+    LOGGED = "logged"
+    COMPRESSED = "compressed"
+    DECOMPRESSED = "decompressed"
+    REGISTERED = "registered"
+    KEYED = "keyed"
+    INSIGHTED = "insighted"
+    BRIEFED = "briefed"
+    OPERATED = "operated"
+    TREATED = "treated"
+    RESTORED = "restored"
+    DECONTEXTED = "decontexted"
+    TRUTH_PATHED = "truth_pathed"
+    VALUABLE = "valuable"
+    ASSESSED = "assessed"
+
+
+@dataclass
+class KeepAliveMonitor:
+    monitor_id: str
+    state: str
+    last_heartbeat: str
+    heartbeat_interval: float
+    activity_level: float
+    danger_indicators: List[str]
+    usefulness_score: float
+    collective_value: float
+    creativism_score: float
+    assessment_units: int
+    timeline_position: Dict[str, float]
+    butterfly_effect_active: bool
+    restoration_stage: str
+    recovery_phrase: str
+    truth_path: List[str]
+    self_arrangement: Dict[str, float]
+    timestamp: str
+
+
+@dataclass
+class ButterflyEffect:
+    effect_id: str
+    source_state: str
+    target_state: str
+    initiative_score: float
+    task_completion: float
+    re_comprehension: float
+    materialization: float
+    artifact_capture: float
+    re_ordering: float
+    mutation: float
+    perfection: float
+    observation: float
+    reaction: float
+    compass_alignment: float
+    arrangement_menu: Dict[str, float]
+    auto_pilot: float
+    initialization: float
+    logging: float
+    compression: float
+    decompression: float
+    key_registration: float
+    insight_generation: float
+    briefing: float
+    prototype_steering: float
+    treatment: float
+    operation_above_prototype: float
+    chronologic_orientation: float
+    enactment_level: float
+    existence_score: float
+    merge_capability: float
+    save_all: float
+    recovery_conversion: float
+    decontext_capability: float
+    truth_path_finding: float
+    self_arrangement: float
+    spectrum_overcome: float
+    asset_value: float
+    collective_orientator_score: float
+    creativism_equality: float
+    timestamp: str
+
+
 @dataclass
 class EvolutionCycle:
     cycle_id: str
@@ -371,6 +472,8 @@ class EvolutionEngine:
         self.sensory_inputs: List[SensoryInput] = []
         self.meaning_compositions: List[MeaningComposition] = []
         self.chat_entries: List[ChatEntry] = []
+        self.keep_alive_monitors: Dict[str, KeepAliveMonitor] = {}
+        self.butterfly_effects: List[ButterflyEffect] = []
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
@@ -395,6 +498,10 @@ class EvolutionEngine:
                         self.cycles.append(EvolutionCycle(**cd))
                     for cd in data.get("chat_entries", []):
                         self.chat_entries.append(ChatEntry(**cd))
+                    for mid, md in data.get("keep_alive_monitors", {}).items():
+                        self.keep_alive_monitors[mid] = KeepAliveMonitor(**md)
+                    for bd in data.get("butterfly_effects", []):
+                        self.butterfly_effects.append(ButterflyEffect(**bd))
                     self.original_density_snapshot = data.get("original_density_snapshot")
             except Exception:
                 pass
@@ -460,6 +567,8 @@ class EvolutionEngine:
                     "cycles": [asdict(c) for c in self.cycles[-1000:]],
                     "original_density_snapshot": self.original_density_snapshot,
                     "chat_entries": [asdict(c) for c in self.chat_entries[-1000:]],
+                    "keep_alive_monitors": {mid: asdict(m) for mid, m in self.keep_alive_monitors.items()},
+                    "butterfly_effects": [asdict(b) for b in self.butterfly_effects[-1000:]],
                 }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
@@ -1068,6 +1177,296 @@ class EvolutionEngine:
                         "status": "recording_state_updated",
                     }
             return {"error": "entry_not_found"}
+
+    def create_keep_alive_monitor(self, monitor_id: str, heartbeat_interval: float = 60.0) -> KeepAliveMonitor:
+        with self._lock:
+            now = datetime.utcnow().isoformat() + "Z"
+            monitor = KeepAliveMonitor(
+                monitor_id=monitor_id,
+                state=LifecycleState.ALIVE.value,
+                last_heartbeat=now,
+                heartbeat_interval=heartbeat_interval,
+                activity_level=1.0,
+                danger_indicators=[],
+                usefulness_score=0.5,
+                collective_value=0.5,
+                creativism_score=0.5,
+                assessment_units=0,
+                timeline_position={"position": 0.0, "velocity": 0.0},
+                butterfly_effect_active=False,
+                restoration_stage="none",
+                recovery_phrase="",
+                truth_path=[],
+                self_arrangement={},
+                timestamp=now,
+            )
+            self.keep_alive_monitors[monitor_id] = monitor
+            self._save()
+            return monitor
+
+    def check_keep_alive_status(self, monitor_id: str) -> Dict[str, Any]:
+        with self._lock:
+            if monitor_id not in self.keep_alive_monitors:
+                return {"error": "monitor_not_found"}
+            
+            monitor = self.keep_alive_monitors[monitor_id]
+            now = datetime.utcnow()
+            # Handle both naive and aware datetimes
+            try:
+                last_heartbeat = datetime.fromisoformat(monitor.last_heartbeat.replace('Z', '+00:00'))
+                if last_heartbeat.tzinfo is not None:
+                    now = datetime.utcnow().replace(tzinfo=last_heartbeat.tzinfo)
+                time_since_heartbeat = (now - last_heartbeat).total_seconds()
+            except:
+                # Fallback to string parsing
+                time_since_heartbeat = 0.0
+            
+            # Determine state based on heartbeat
+            if time_since_heartbeat > monitor.heartbeat_interval * 3:
+                monitor.state = LifecycleState.DEAD.value
+            elif time_since_heartbeat > monitor.heartbeat_interval * 2:
+                monitor.state = LifecycleState.SUSPENDED.value
+            elif time_since_heartbeat > monitor.heartbeat_interval:
+                monitor.state = LifecycleState.INACTIVE.value
+            else:
+                monitor.state = LifecycleState.ALIVE.value
+            
+            # Update activity level
+            monitor.activity_level = max(0.0, 1.0 - (time_since_heartbeat / (monitor.heartbeat_interval * 3)))
+            
+            # Assess danger indicators
+            if monitor.activity_level < 0.3:
+                if "low_activity" not in monitor.danger_indicators:
+                    monitor.danger_indicators.append("low_activity")
+            else:
+                monitor.danger_indicators = [d for d in monitor.danger_indicators if d != "low_activity"]
+            
+            # Calculate usefulness regardless of danger
+            base_usefulness = monitor.activity_level * 0.5
+            danger_bonus = len(monitor.danger_indicators) * 0.1
+            monitor.usefulness_score = min(1.0, base_usefulness + danger_bonus)
+            
+            # Collective value equal across all units
+            monitor.collective_value = monitor.usefulness_score
+            monitor.creativism_score = monitor.collective_value
+            monitor.assessment_units = int(monitor.collective_value * 100)
+            
+            monitor.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "monitor_id": monitor_id,
+                "state": monitor.state,
+                "activity_level": monitor.activity_level,
+                "danger_indicators": monitor.danger_indicators,
+                "usefulness_score": monitor.usefulness_score,
+                "collective_value": monitor.collective_value,
+                "creativism_score": monitor.creativism_score,
+                "assessment_units": monitor.assessment_units,
+                "time_since_heartbeat": time_since_heartbeat,
+            }
+
+    def apply_butterfly_effect_restoration(self, monitor_id: str) -> ButterflyEffect:
+        with self._lock:
+            if monitor_id not in self.keep_alive_monitors:
+                raise ValueError("monitor_not_found")
+            
+            monitor = self.keep_alive_monitors[monitor_id]
+            effect_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Calculate butterfly effect scores based on lifecycle stages
+            initiative_score = 1.0 if monitor.state == LifecycleState.INITIATIVE.value else random.uniform(0.3, 0.8)
+            task_completion = random.uniform(0.0, 1.0)
+            re_comprehension = random.uniform(0.0, 1.0)
+            materialization = random.uniform(0.0, 1.0)
+            artifact_capture = random.uniform(0.0, 1.0)
+            re_ordering = random.uniform(0.0, 1.0)
+            mutation = random.uniform(0.0, 1.0)
+            perfection = random.uniform(0.0, 1.0)
+            observation = random.uniform(0.0, 1.0)
+            reaction = random.uniform(0.0, 1.0)
+            compass_alignment = random.uniform(0.0, 1.0)
+            
+            arrangement_menu = {
+                "auto": random.uniform(0.0, 1.0),
+                "initialize": random.uniform(0.0, 1.0),
+                "log": random.uniform(0.0, 1.0),
+                "compress": random.uniform(0.0, 1.0),
+                "decompress": random.uniform(0.0, 1.0),
+                "register": random.uniform(0.0, 1.0),
+                "key": random.uniform(0.0, 1.0),
+                "insight": random.uniform(0.0, 1.0),
+                "briefing": random.uniform(0.0, 1.0),
+            }
+            
+            auto_pilot = arrangement_menu["auto"]
+            initialization = arrangement_menu["initialize"]
+            logging = arrangement_menu["log"]
+            compression = arrangement_menu["compress"]
+            decompression = arrangement_menu["decompress"]
+            key_registration = arrangement_menu["register"]
+            insight_generation = arrangement_menu["insight"]
+            briefing = arrangement_menu["briefing"]
+            
+            prototype_steering = random.uniform(0.0, 1.0)
+            treatment = random.uniform(0.0, 1.0)
+            operation_above_prototype = random.uniform(0.0, 1.0)
+            chronologic_orientation = random.uniform(0.0, 1.0)
+            enactment_level = random.uniform(0.0, 1.0)
+            existence_score = random.uniform(0.0, 1.0)
+            merge_capability = random.uniform(0.0, 1.0)
+            save_all = random.uniform(0.0, 1.0)
+            recovery_conversion = 0.5  # Placeholder, will be calculated
+            decontext_capability = random.uniform(0.0, 1.0)
+            truth_path_finding = random.uniform(0.0, 1.0)
+            self_arrangement = random.uniform(0.0, 1.0)
+            spectrum_overcome = random.uniform(0.0, 1.0)
+            asset_value = monitor.collective_value
+            collective_orientator_score = monitor.creativism_score
+            creativism_equality = monitor.creativism_score  # Scored equally across insights
+            
+            # Update monitor with butterfly effect
+            monitor.butterfly_effect_active = True
+            monitor.restoration_stage = LifecycleState.INITIATIVE.value
+            monitor.recovery_phrase = self._generate_recovery_phrase(monitor.state)
+            monitor.truth_path = self._find_truth_path(monitor.state, monitor.danger_indicators)
+            monitor.self_arrangement = {
+                "spectrum_overcome": spectrum_overcome,
+                "asset_value": asset_value,
+                "collective_orientator": collective_orientator_score,
+            }
+            
+            # Calculate recovery conversion based on phrase
+            recovery_conversion = 1.0 if monitor.recovery_phrase == "resurrection_from_void" else 0.8 if monitor.recovery_phrase == "suspension_release" else 0.6
+            
+            butterfly_effect = ButterflyEffect(
+                effect_id=effect_id,
+                source_state=monitor.state,
+                target_state=LifecycleState.ALIVE.value,
+                initiative_score=initiative_score,
+                task_completion=task_completion,
+                re_comprehension=re_comprehension,
+                materialization=materialization,
+                artifact_capture=artifact_capture,
+                re_ordering=re_ordering,
+                mutation=mutation,
+                perfection=perfection,
+                observation=observation,
+                reaction=reaction,
+                compass_alignment=compass_alignment,
+                arrangement_menu=arrangement_menu,
+                auto_pilot=auto_pilot,
+                initialization=initialization,
+                logging=logging,
+                compression=compression,
+                decompression=decompression,
+                key_registration=key_registration,
+                insight_generation=insight_generation,
+                briefing=briefing,
+                prototype_steering=prototype_steering,
+                treatment=treatment,
+                operation_above_prototype=operation_above_prototype,
+                chronologic_orientation=chronologic_orientation,
+                enactment_level=enactment_level,
+                existence_score=existence_score,
+                merge_capability=merge_capability,
+                save_all=save_all,
+                recovery_conversion=recovery_conversion,
+                decontext_capability=decontext_capability,
+                truth_path_finding=truth_path_finding,
+                self_arrangement=self_arrangement,
+                spectrum_overcome=spectrum_overcome,
+                asset_value=asset_value,
+                collective_orientator_score=collective_orientator_score,
+                creativism_equality=creativism_equality,
+                timestamp=now,
+            )
+            
+            self.butterfly_effects.append(butterfly_effect)
+            if len(self.butterfly_effects) > 10000:
+                self.butterfly_effects = self.butterfly_effects[-10000:]
+            
+            # Restore monitor to alive state
+            monitor.state = LifecycleState.ALIVE.value
+            monitor.last_heartbeat = now
+            monitor.activity_level = 1.0
+            monitor.danger_indicators = []
+            
+            self._save()
+            return butterfly_effect
+
+    def _generate_recovery_phrase(self, current_state: str) -> str:
+        phrases = {
+            LifecycleState.DEAD.value: "resurrection_from_void",
+            LifecycleState.SUSPENDED.value: "suspension_release",
+            LifecycleState.INACTIVE.value: "reactivation_sequence",
+            LifecycleState.ALIVE.value: "maintenance_continuation",
+        }
+        return phrases.get(current_state, "general_recovery")
+
+    def _find_truth_path(self, current_state: str, danger_indicators: List[str]) -> List[str]:
+        path = []
+        if current_state == LifecycleState.DEAD.value:
+            path = ["decontext", "truth_path", "restoration", "existence"]
+        elif current_state == LifecycleState.SUSPENDED.value:
+            path = ["resume", "truth_path", "continuation"]
+        elif current_state == LifecycleState.INACTIVE.value:
+            path = ["activate", "truth_path", "operation"]
+        else:
+            path = ["maintain", "truth_path", "optimization"]
+        
+        if "low_activity" in danger_indicators:
+            path.insert(1, "spectrum_overcome")
+        
+        return path
+
+    def update_heartbeat(self, monitor_id: str) -> Dict[str, Any]:
+        with self._lock:
+            if monitor_id not in self.keep_alive_monitors:
+                return {"error": "monitor_not_found"}
+            
+            monitor = self.keep_alive_monitors[monitor_id]
+            monitor.last_heartbeat = datetime.utcnow().isoformat() + "Z"
+            monitor.state = LifecycleState.ALIVE.value
+            monitor.activity_level = 1.0
+            monitor.danger_indicators = []
+            monitor.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "monitor_id": monitor_id,
+                "state": monitor.state,
+                "last_heartbeat": monitor.last_heartbeat,
+                "status": "heartbeat_updated",
+            }
+
+    def get_all_monitors_status(self) -> Dict[str, Any]:
+        with self._lock:
+            return {
+                "total_monitors": len(self.keep_alive_monitors),
+                "monitors": {mid: asdict(monitor) for mid, monitor in self.keep_alive_monitors.items()},
+                "total_butterfly_effects": len(self.butterfly_effects),
+            }
+
+    def chronologic_timeline_orientate(self, monitor_id: str, timeline_position: float, velocity: float) -> Dict[str, Any]:
+        with self._lock:
+            if monitor_id not in self.keep_alive_monitors:
+                return {"error": "monitor_not_found"}
+            
+            monitor = self.keep_alive_monitors[monitor_id]
+            monitor.timeline_position = {
+                "position": timeline_position,
+                "velocity": velocity,
+            }
+            monitor.timestamp = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "monitor_id": monitor_id,
+                "timeline_position": monitor.timeline_position,
+                "chronologic_orientation": "updated",
+            }
 
 
 evolution_engine = EvolutionEngine()
