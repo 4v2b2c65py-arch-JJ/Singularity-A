@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from qb_protocol.server.api_server import app
 from qb_protocol.server.monitor_integration import monitor_integration

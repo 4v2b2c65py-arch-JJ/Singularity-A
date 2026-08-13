@@ -23,6 +23,14 @@
     <dict>
         <key>PATH</key>
         <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>AI_MODE_ENABLED</key>
+        <string>true</string>
+        <key>AI_MODEL_PROVIDER</key>
+        <string>local</string>
+        <key>AI_MODEL_PATH</key>
+        <string>/Users/jjmarte/delta-stream/qb_protocol/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf</string>
+        <key>TINYLLAMA_MODEL</key>
+        <string>tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf</string>
     </dict>
 </dict>
 </plist>
