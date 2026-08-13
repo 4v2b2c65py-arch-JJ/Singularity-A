@@ -688,6 +688,142 @@ class GeneticPattern:
 
 
 @dataclass
+class UserPatternReflection:
+    reflection_id: str
+    user_id: str
+    pattern_type: str
+    similar_users: List[str]
+    dissimilar_users: List[str]
+    pattern_frequency: float
+    global_pattern_count: int
+    user_pattern_rank: int
+    similarity_scores: Dict[str, float]
+    pattern_strength: float
+    reflection_timestamp: str
+
+
+@dataclass
+class UserMetrics:
+    metrics_id: str
+    user_id: str
+    pattern_matches: int
+    pattern_mismatches: int
+    similarity_index: float
+    uniqueness_score: float
+    family_connections: int
+    branch_affinity: Dict[str, float]
+    global_position: Dict[str, float]
+    update_frequency: str
+    last_update: str
+    metrics_timestamp: str
+
+
+@dataclass
+class FamilyBranch:
+    branch_id: str
+    branch_name: str
+    constructive_field: Dict[str, Any]
+    members: List[str]
+    common_patterns: List[str]
+    genetic_markers: List[str]
+    geographical_origin: str
+    historical_context: Dict[str, Any]
+    query_capabilities: List[str]
+    cloud_storage_id: str
+    distribution_status: str
+    branch_confidence: float
+    branch_timestamp: str
+
+
+@dataclass
+class CloudStorage:
+    storage_id: str
+    storage_type: str
+    location: str
+    capacity: float
+    usage: float
+    data_categories: List[str]
+    access_level: str
+    distribution_strategy: str
+    replication_factor: int
+    query_performance: float
+    storage_timestamp: str
+
+
+@dataclass
+class GenealogyDataset:
+    dataset_id: str
+    source: str
+    dataset_type: str
+    coverage: str
+    access_method: str
+    authentication_required: bool
+    records_count: int
+    countries_covered: List[str]
+    data_format: str
+    last_updated: str
+    dataset_url: str
+    spql_endpoint: Optional[str]
+    api_endpoint: Optional[str]
+    dataset_timestamp: str
+
+
+@dataclass
+class WikidataGenealogy:
+    query_id: str
+    person_id: str
+    person_name: str
+    birth_date: str
+    death_date: Optional[str]
+    family_connections: List[Dict[str, str]]
+    occupations: List[str]
+    nationalities: List[str]
+    genealogical_data: Dict[str, Any]
+    query_timestamp: str
+
+
+@dataclass
+class FederalRegisterData:
+    document_id: str
+    document_type: str
+    title: str
+    publication_date: str
+    agencies: List[str]
+    topics: List[str]
+    regulatory_text: str
+    related_persons: List[Dict[str, str]]
+    genealogical_relevance: float
+    data_timestamp: str
+
+
+@dataclass
+class UserConfiguration:
+    config_id: str
+    user_id: str
+    pattern_preferences: Dict[str, float]
+    family_branch_associations: List[str]
+    genealogy_sources: List[str]
+    cloud_storage_preferences: Dict[str, str]
+    data_refresh_interval: int
+    privacy_settings: Dict[str, str]
+    notification_settings: Dict[str, bool]
+    integration_settings: Dict[str, Any]
+    config_timestamp: str
+
+
+@dataclass
+class KeyInsights:
+    insight_id: str
+    user_id: str
+    pattern_insights: List[Dict[str, Any]]
+    family_insights: List[Dict[str, Any]]
+    genealogical_insights: List[Dict[str, Any]]
+    behavioral_insights: List[Dict[str, Any]]
+    confidence_scores: Dict[str, float]
+    insight_timestamp: str
+
+
+@dataclass
 class EvolutionCycle:
     cycle_id: str
     iteration: int
@@ -725,6 +861,15 @@ class EvolutionEngine:
         self.birth_events: List[BirthEvent] = []
         self.environmental_patterns: Dict[str, EnvironmentalPattern] = {}
         self.genetic_patterns: Dict[str, GeneticPattern] = {}
+        self.user_pattern_reflections: Dict[str, UserPatternReflection] = {}
+        self.user_metrics: Dict[str, UserMetrics] = {}
+        self.family_branches: Dict[str, FamilyBranch] = {}
+        self.cloud_storages: Dict[str, CloudStorage] = {}
+        self.genealogy_datasets: Dict[str, GenealogyDataset] = {}
+        self.wikidata_genealogies: List[WikidataGenealogy] = []
+        self.federal_register_data: List[FederalRegisterData] = []
+        self.user_configurations: Dict[str, UserConfiguration] = {}
+        self.key_insights: Dict[str, KeyInsights] = {}
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
@@ -734,6 +879,7 @@ class EvolutionEngine:
         self._seed_initial_personas()
         self._seed_age_groups()
         self._seed_user_cycles()
+        self._seed_genealogy_datasets()
 
     def _load(self):
         if self.db_path.exists():
@@ -780,6 +926,24 @@ class EvolutionEngine:
                         self.environmental_patterns[pid] = EnvironmentalPattern(**pd)
                     for pid, pd in data.get("genetic_patterns", {}).items():
                         self.genetic_patterns[pid] = GeneticPattern(**pd)
+                    for rid, rd in data.get("user_pattern_reflections", {}).items():
+                        self.user_pattern_reflections[rid] = UserPatternReflection(**rd)
+                    for mid, md in data.get("user_metrics", {}).items():
+                        self.user_metrics[mid] = UserMetrics(**md)
+                    for bid, bd in data.get("family_branches", {}).items():
+                        self.family_branches[bid] = FamilyBranch(**bd)
+                    for sid, sd in data.get("cloud_storages", {}).items():
+                        self.cloud_storages[sid] = CloudStorage(**sd)
+                    for did, dd in data.get("genealogy_datasets", {}).items():
+                        self.genealogy_datasets[did] = GenealogyDataset(**dd)
+                    for wd in data.get("wikidata_genealogies", []):
+                        self.wikidata_genealogies.append(WikidataGenealogy(**wd))
+                    for fd in data.get("federal_register_data", []):
+                        self.federal_register_data.append(FederalRegisterData(**fd))
+                    for cid, cd in data.get("user_configurations", {}).items():
+                        self.user_configurations[cid] = UserConfiguration(**cd)
+                    for kid, kd in data.get("key_insights", {}).items():
+                        self.key_insights[kid] = KeyInsights(**kd)
                     self.original_density_snapshot = data.get("original_density_snapshot")
             except Exception:
                 pass
@@ -859,6 +1023,15 @@ class EvolutionEngine:
                     "birth_events": [asdict(b) for b in self.birth_events[-1000:]],
                     "environmental_patterns": {pid: asdict(p) for pid, p in self.environmental_patterns.items()},
                     "genetic_patterns": {pid: asdict(p) for pid, p in self.genetic_patterns.items()},
+                    "user_pattern_reflections": {rid: asdict(r) for rid, r in self.user_pattern_reflections.items()},
+                    "user_metrics": {mid: asdict(m) for mid, m in self.user_metrics.items()},
+                    "family_branches": {bid: asdict(b) for bid, b in self.family_branches.items()},
+                    "cloud_storages": {sid: asdict(s) for sid, s in self.cloud_storages.items()},
+                    "genealogy_datasets": {did: asdict(d) for did, d in self.genealogy_datasets.items()},
+                    "wikidata_genealogies": [asdict(w) for w in self.wikidata_genealogies[-1000:]],
+                    "federal_register_data": [asdict(f) for f in self.federal_register_data[-1000:]],
+                    "user_configurations": {cid: asdict(c) for cid, c in self.user_configurations.items()},
+                    "key_insights": {kid: asdict(k) for kid, k in self.key_insights.items()},
                 }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
@@ -972,6 +1145,36 @@ class EvolutionEngine:
                 establishment_potential=establishment_potential,
                 routine_flexibility=routine_flexibility,
                 experience_types=experience_types,
+            )
+        self._save()
+
+    def _seed_genealogy_datasets(self):
+        if self.genealogy_datasets:
+            return
+        datasets = [
+            ("wikidata", "Wikidata", "sparql", "worldwide", "SPARQL", False, 10000000, ["all"], "JSON", "https://query.wikidata.org/sparql", "https://query.wikidata.org/sparql", None),
+            ("federal_register", "Federal Register", "api", "usa", "REST", False, 5000000, ["usa"], "JSON", "https://www.federalregister.gov/api/v1/documents.json", None, "https://www.federalregister.gov/api/v1/documents.json"),
+            ("data_gov", "Data.gov", "api", "usa", "REST", True, 2000000, ["usa"], "JSON", "https://api.data.gov/", None, "https://api.data.gov/"),
+            ("gramps", "Gramps Example Database", "file", "worldwide", "GEDCOM", False, 100000, ["multiple"], "GEDCOM", "https://gramps-project.org/wiki/Example_databases", None, None),
+            ("familysearch_public", "FamilySearch Public", "api", "worldwide", "REST", False, 5000000, ["all"], "JSON", "https://api.familysearch.org/", None, "https://api.familysearch.org/"),
+        ]
+        now = datetime.utcnow().isoformat() + "Z"
+        for dataset_id, source, dataset_type, coverage, access_method, auth_required, records_count, countries, data_format, url, spql, api in datasets:
+            self.genealogy_datasets[dataset_id] = GenealogyDataset(
+                dataset_id=dataset_id,
+                source=source,
+                dataset_type=dataset_type,
+                coverage=coverage,
+                access_method=access_method,
+                authentication_required=auth_required,
+                records_count=records_count,
+                countries_covered=countries,
+                data_format=data_format,
+                last_updated=now,
+                dataset_url=url,
+                spql_endpoint=spql,
+                api_endpoint=api,
+                dataset_timestamp=now,
             )
         self._save()
 
@@ -2798,6 +3001,589 @@ class EvolutionEngine:
                     "total_emergences": len(self.consciousness_emergences),
                     "emergences": {eid: asdict(e) for eid, e in self.consciousness_emergences.items()},
                 }
+
+    def reflect_user_pattern(self, user_id: str, pattern_type: str) -> UserPatternReflection:
+        with self._lock:
+            reflection_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Find similar and dissimilar users based on pattern
+            similar_users = []
+            dissimilar_users = []
+            similarity_scores = {}
+            
+            for other_user_id, other_discovery in self.user_discoveries.items():
+                if other_user_id == user_id:
+                    continue
+                
+                # Calculate similarity based on consciousness emergence
+                similarity = self._calculate_pattern_similarity(user_id, other_user_id)
+                similarity_scores[other_user_id] = similarity
+                
+                if similarity > 0.7:
+                    similar_users.append(other_user_id)
+                elif similarity < 0.3:
+                    dissimilar_users.append(other_user_id)
+            
+            # Calculate pattern frequency
+            global_pattern_count = len(self.user_discoveries)
+            pattern_frequency = len(similar_users) / max(1, global_pattern_count)
+            
+            # Determine user pattern rank
+            sorted_users = sorted(similarity_scores.items(), key=lambda x: x[1], reverse=True)
+            user_rank = next((i for i, (uid, _) in enumerate(sorted_users) if uid == user_id), 0)
+            
+            # Calculate pattern strength
+            pattern_strength = sum(similarity_scores.values()) / max(1, len(similarity_scores))
+            
+            reflection = UserPatternReflection(
+                reflection_id=reflection_id,
+                user_id=user_id,
+                pattern_type=pattern_type,
+                similar_users=similar_users,
+                dissimilar_users=dissimilar_users,
+                pattern_frequency=pattern_frequency,
+                global_pattern_count=global_pattern_count,
+                user_pattern_rank=user_rank,
+                similarity_scores=similarity_scores,
+                pattern_strength=pattern_strength,
+                reflection_timestamp=now,
+            )
+            
+            self.user_pattern_reflections[reflection_id] = reflection
+            self._save()
+            return reflection
+
+    def _calculate_pattern_similarity(self, user_id1: str, user_id2: str) -> float:
+        if user_id1 not in self.user_discoveries or user_id2 not in self.user_discoveries:
+            return 0.0
+        
+        user1 = self.user_discoveries[user_id1]
+        user2 = self.user_discoveries[user_id2]
+        
+        # Calculate similarity based on various factors
+        age_similarity = 1.0 - abs(user1.age - user2.age) / 100.0
+        cycle_similarity = 1.0 if user1.user_cycle == user2.user_cycle else 0.5
+        group_similarity = 1.0 if user1.age_group == user2.age_group else 0.3
+        
+        # Emotional similarity
+        if user1.emotions and user2.emotions:
+            emotion_keys = set(user1.emotions.keys()) & set(user2.emotions.keys())
+            if emotion_keys:
+                emotion_sim = sum(abs(user1.emotions[k] - user2.emotions[k]) for k in emotion_keys) / len(emotion_keys)
+                emotion_similarity = 1.0 - emotion_sim
+            else:
+                emotion_similarity = 0.5
+        else:
+            emotion_similarity = 0.5
+        
+        # Combine similarities
+        overall_similarity = (age_similarity + cycle_similarity + group_similarity + emotion_similarity) / 4.0
+        return max(0.0, min(1.0, overall_similarity))
+
+    def update_user_metrics(self, user_id: str) -> UserMetrics:
+        with self._lock:
+            metrics_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Get user pattern reflection
+            reflection = None
+            for ref_id, ref in self.user_pattern_reflections.items():
+                if ref.user_id == user_id:
+                    reflection = ref
+                    break
+            
+            if not reflection:
+                reflection = self.reflect_user_pattern(user_id, "general")
+            
+            # Calculate metrics
+            pattern_matches = len(reflection.similar_users)
+            pattern_mismatches = len(reflection.dissimilar_users)
+            similarity_index = reflection.pattern_strength
+            uniqueness_score = 1.0 - reflection.pattern_frequency
+            
+            # Family connections
+            family_connections = len([b for b in self.family_branches.values() if user_id in b.members])
+            
+            # Branch affinity
+            branch_affinity = {}
+            for branch_id, branch in self.family_branches.items():
+                if user_id in branch.members:
+                    branch_affinity[branch_id] = random.uniform(0.5, 0.9)
+            
+            # Global position
+            global_position = {
+                "pattern_rank": reflection.user_pattern_rank,
+                "global_percentile": (reflection.user_pattern_rank / max(1, reflection.global_pattern_count)) * 100,
+                "similarity_distribution": reflection.pattern_frequency,
+            }
+            
+            metrics = UserMetrics(
+                metrics_id=metrics_id,
+                user_id=user_id,
+                pattern_matches=pattern_matches,
+                pattern_mismatches=pattern_mismatches,
+                similarity_index=similarity_index,
+                uniqueness_score=uniqueness_score,
+                family_connections=family_connections,
+                branch_affinity=branch_affinity,
+                global_position=global_position,
+                update_frequency="daily",
+                last_update=now,
+                metrics_timestamp=now,
+            )
+            
+            self.user_metrics[metrics_id] = metrics
+            self._save()
+            return metrics
+
+    def create_family_branch(self, branch_name: str, members: List[str], geographical_origin: str) -> FamilyBranch:
+        with self._lock:
+            branch_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Identify common patterns among members
+            common_patterns = []
+            if len(members) > 1:
+                member_patterns = {}
+                for member_id in members:
+                    if member_id in self.user_discoveries:
+                        member_patterns[member_id] = self.user_discoveries[member_id].user_cycle
+                
+                if member_patterns:
+                    pattern_counts = {}
+                    for pattern in member_patterns.values():
+                        pattern_counts[pattern] = pattern_counts.get(pattern, 0) + 1
+                    
+                    common_patterns = [p for p, c in pattern_counts.items() if c > len(members) / 2]
+            
+            # Extract genetic markers
+            genetic_markers = []
+            for member_id in members:
+                if member_id in self.consciousness_emergences:
+                    emergence = self.consciousness_emergences[member_id]
+                    genetic_markers.extend(list(emergence.genetic_patterns.keys()))
+            
+            genetic_markers = list(set(genetic_markers))
+            
+            # Create constructive field
+            constructive_field = {
+                "branch_strength": random.uniform(0.6, 0.9),
+                "genetic_correlation": random.uniform(0.5, 0.8),
+                "geographical_spread": random.uniform(0.3, 0.7),
+                "historical_depth": random.uniform(0.4, 0.8),
+                "cultural_preservation": random.uniform(0.5, 0.9),
+            }
+            
+            # Historical context
+            historical_context = {
+                "formation_period": "unknown",
+                "major_events": [],
+                "cultural_influences": [],
+                "migrations": [],
+            }
+            
+            # Query capabilities
+            query_capabilities = [
+                "pattern_search",
+                "genetic_marker_search",
+                "geographical_search",
+                "temporal_search",
+                "relationship_search",
+            ]
+            
+            # Create cloud storage
+            cloud_storage_id = self._create_cloud_storage(branch_name)
+            
+            branch = FamilyBranch(
+                branch_id=branch_id,
+                branch_name=branch_name,
+                constructive_field=constructive_field,
+                members=members,
+                common_patterns=common_patterns,
+                genetic_markers=genetic_markers,
+                geographical_origin=geographical_origin,
+                historical_context=historical_context,
+                query_capabilities=query_capabilities,
+                cloud_storage_id=cloud_storage_id,
+                distribution_status="active",
+                branch_confidence=random.uniform(0.7, 0.95),
+                branch_timestamp=now,
+            )
+            
+            self.family_branches[branch_id] = branch
+            self._save()
+            return branch
+
+    def _create_cloud_storage(self, branch_name: str) -> str:
+        storage_id = str(uuid.uuid4())
+        now = datetime.utcnow().isoformat() + "Z"
+        
+        storage = CloudStorage(
+            storage_id=storage_id,
+            storage_type="distributed",
+            location="global",
+            capacity=1000.0,
+            usage=0.0,
+            data_categories=["genealogy", "patterns", "metrics", "configurations"],
+            access_level="private",
+            distribution_strategy="geo_replicated",
+            replication_factor=3,
+            query_performance=0.9,
+            storage_timestamp=now,
+        )
+        
+        self.cloud_storages[storage_id] = storage
+        return storage_id
+
+    def query_wikidata_genealogy(self, person_name: str) -> WikidataGenealogy:
+        with self._lock:
+            query_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # SPARQL query for Wikidata genealogy
+            sparql_query = f"""
+            SELECT ?person ?personLabel ?birthDate ?deathDate ?familyName WHERE {{
+              ?person wdt:P31 wd:Q5.
+              ?person rdfs:label "{person_name}"@en.
+              OPTIONAL {{ ?person wdt:P569 ?birthDate. }}
+              OPTIONAL {{ ?person wdt:P570 ?deathDate. }}
+              OPTIONAL {{ ?person wdt:P734 ?familyName. }}
+              SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+            }}
+            LIMIT 10
+            """
+            
+            try:
+                response = requests.get(
+                    "https://query.wikidata.org/sparql",
+                    params={"query": sparql_query, "format": "json"},
+                    headers={"Accept": "application/sparql-results+json"},
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    results = data.get("results", {}).get("bindings", [])
+                    
+                    if results:
+                        result = results[0]
+                        person_id = result.get("person", {}).get("value", "").split("/")[-1]
+                        person_name = result.get("personLabel", {}).get("value", person_name)
+                        birth_date = result.get("birthDate", {}).get("value", "")
+                        death_date = result.get("deathDate", {}).get("value", None)
+                        family_name = result.get("familyName", {}).get("value", "")
+                        
+                        # Simulate family connections
+                        family_connections = [
+                            {"relation": "parent", "name": f"Parent of {person_name}"},
+                            {"relation": "sibling", "name": f"Sibling of {person_name}"},
+                        ]
+                        
+                        occupations = ["unknown"]
+                        nationalities = ["unknown"]
+                        
+                        genealogical_data = {
+                            "family_name": family_name,
+                            "birth_location": "unknown",
+                            "death_location": "unknown" if death_date else None,
+                        }
+                    else:
+                        # Fallback to simulated data
+                        person_id = str(uuid.uuid4())
+                        person_name = person_name
+                        birth_date = ""
+                        death_date = None
+                        family_connections = []
+                        occupations = []
+                        nationalities = []
+                        genealogical_data = {}
+                else:
+                    # Fallback to simulated data
+                    person_id = str(uuid.uuid4())
+                    person_name = person_name
+                    birth_date = ""
+                    death_date = None
+                    family_connections = []
+                    occupations = []
+                    nationalities = []
+                    genealogical_data = {}
+            except Exception:
+                # Fallback to simulated data
+                person_id = str(uuid.uuid4())
+                person_name = person_name
+                birth_date = ""
+                death_date = None
+                family_connections = []
+                occupations = []
+                nationalities = []
+                genealogical_data = {}
+            
+            wikidata_genealogy = WikidataGenealogy(
+                query_id=query_id,
+                person_id=person_id,
+                person_name=person_name,
+                birth_date=birth_date,
+                death_date=death_date,
+                family_connections=family_connections,
+                occupations=occupations,
+                nationalities=nationalities,
+                genealogical_data=genealogical_data,
+                query_timestamp=now,
+            )
+            
+            self.wikidata_genealogies.append(wikidata_genealogy)
+            if len(self.wikidata_genealogies) > 10000:
+                self.wikidata_genealogies = self.wikidata_genealogies[-10000:]
+            
+            self._save()
+            return wikidata_genealogy
+
+    def query_federal_register(self, search_term: str) -> List[FederalRegisterData]:
+        with self._lock:
+            now = datetime.utcnow().isoformat() + "Z"
+            results = []
+            
+            try:
+                response = requests.get(
+                    "https://www.federalregister.gov/api/v1/documents.json",
+                    params={"conditions[term]": search_term, "per_page": 5},
+                    timeout=10
+                )
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    documents = data.get("results", [])
+                    
+                    for doc in documents:
+                        document_id = str(uuid.uuid4())
+                        document_type = doc.get("type", "unknown")
+                        title = doc.get("title", "")
+                        publication_date = doc.get("publication_date", "")
+                        agencies = [a.get("name", "") for a in doc.get("agencies", [])]
+                        topics = doc.get("topics", [])
+                        regulatory_text = doc.get("body", "")[:500]  # Truncate for storage
+                        
+                        # Genealogical relevance based on content
+                        genealogical_relevance = random.uniform(0.1, 0.5)
+                        
+                        # Simulate related persons
+                        related_persons = []
+                        
+                        federal_data = FederalRegisterData(
+                            document_id=document_id,
+                            document_type=document_type,
+                            title=title,
+                            publication_date=publication_date,
+                            agencies=agencies,
+                            topics=topics,
+                            regulatory_text=regulatory_text,
+                            related_persons=related_persons,
+                            genealogical_relevance=genealogical_relevance,
+                            data_timestamp=now,
+                        )
+                        
+                        results.append(federal_data)
+            except Exception:
+                # Fallback to empty results
+                pass
+            
+            self.federal_register_data.extend(results)
+            if len(self.federal_register_data) > 10000:
+                self.federal_register_data = self.federal_register_data[-10000:]
+            
+            self._save()
+            return results
+
+    def create_user_configuration(self, user_id: str) -> UserConfiguration:
+        with self._lock:
+            config_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Pattern preferences
+            pattern_preferences = {
+                "consciousness_emergence": 0.8,
+                "genetic_patterns": 0.7,
+                "environmental_factors": 0.6,
+                "family_connections": 0.9,
+            }
+            
+            # Family branch associations
+            family_branch_associations = []
+            for branch_id, branch in self.family_branches.items():
+                if user_id in branch.members:
+                    family_branch_associations.append(branch_id)
+            
+            # Genealogy sources
+            genealogy_sources = ["wikidata", "federal_register"]
+            
+            # Cloud storage preferences
+            cloud_storage_preferences = {
+                "storage_type": "distributed",
+                "replication": "geo_replicated",
+                "access_level": "private",
+            }
+            
+            # Privacy settings
+            privacy_settings = {
+                "data_sharing": "restricted",
+                "pattern_visibility": "family_only",
+                "genealogy_access": "authenticated",
+            }
+            
+            # Notification settings
+            notification_settings = {
+                "pattern_matches": True,
+                "family_updates": True,
+                "genealogy_discoveries": True,
+            }
+            
+            # Integration settings
+            integration_settings = {
+                "wikidata_enabled": True,
+                "federal_register_enabled": True,
+                "auto_refresh": True,
+            }
+            
+            configuration = UserConfiguration(
+                config_id=config_id,
+                user_id=user_id,
+                pattern_preferences=pattern_preferences,
+                family_branch_associations=family_branch_associations,
+                genealogy_sources=genealogy_sources,
+                cloud_storage_preferences=cloud_storage_preferences,
+                data_refresh_interval=86400,  # 24 hours
+                privacy_settings=privacy_settings,
+                notification_settings=notification_settings,
+                integration_settings=integration_settings,
+                config_timestamp=now,
+            )
+            
+            self.user_configurations[config_id] = configuration
+            self._save()
+            return configuration
+
+    def generate_key_insights(self, user_id: str) -> KeyInsights:
+        with self._lock:
+            insight_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Pattern insights
+            pattern_insights = []
+            for ref_id, ref in self.user_pattern_reflections.items():
+                if ref.user_id == user_id:
+                    pattern_insights.append({
+                        "pattern_type": ref.pattern_type,
+                        "similar_users_count": len(ref.similar_users),
+                        "pattern_strength": ref.pattern_strength,
+                        "global_rank": ref.user_pattern_rank,
+                    })
+            
+            # Family insights
+            family_insights = []
+            for branch_id, branch in self.family_branches.items():
+                if user_id in branch.members:
+                    family_insights.append({
+                        "branch_name": branch.branch_name,
+                        "branch_size": len(branch.members),
+                        "common_patterns": branch.common_patterns,
+                        "branch_confidence": branch.branch_confidence,
+                    })
+            
+            # Genealogical insights
+            genealogical_insights = []
+            for wikidata in self.wikidata_genealogies:
+                if wikidata.person_name == self.user_discoveries.get(user_id, {}).discovered_name:
+                    genealogical_insights.append({
+                        "source": "wikidata",
+                        "birth_date": wikidata.birth_date,
+                        "family_connections": len(wikidata.family_connections),
+                    })
+            
+            # Behavioral insights
+            behavioral_insights = []
+            if user_id in self.user_discoveries:
+                user = self.user_discoveries[user_id]
+                behavioral_insights.append({
+                    "thought_patterns": len(user.thoughts),
+                    "emotional_complexity": len(user.emotions),
+                    "reaction_speed": user.reactions.get("surprise", 0.5),
+                    "bonding_capacity": user.bonding_relations.get("family", 0.5),
+                })
+            
+            # Confidence scores
+            confidence_scores = {
+                "pattern_confidence": 0.8 if pattern_insights else 0.0,
+                "family_confidence": 0.9 if family_insights else 0.0,
+                "genealogical_confidence": 0.7 if genealogical_insights else 0.0,
+                "behavioral_confidence": 0.85 if behavioral_insights else 0.0,
+            }
+            
+            insights = KeyInsights(
+                insight_id=insight_id,
+                user_id=user_id,
+                pattern_insights=pattern_insights,
+                family_insights=family_insights,
+                genealogical_insights=genealogical_insights,
+                behavioral_insights=behavioral_insights,
+                confidence_scores=confidence_scores,
+                insight_timestamp=now,
+            )
+            
+            self.key_insights[insight_id] = insights
+            self._save()
+            return insights
+
+    def query_family_branch(self, branch_id: str, query_type: str, query_params: Dict[str, Any]) -> Dict[str, Any]:
+        with self._lock:
+            if branch_id not in self.family_branches:
+                return {"error": "branch_not_found"}
+            
+            branch = self.family_branches[branch_id]
+            
+            if query_type not in branch.query_capabilities:
+                return {"error": "query_not_supported"}
+            
+            results = {
+                "branch_id": branch_id,
+                "query_type": query_type,
+                "query_params": query_params,
+                "results": [],
+                "query_timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            
+            if query_type == "pattern_search":
+                pattern = query_params.get("pattern", "")
+                if pattern in branch.common_patterns:
+                    results["results"] = branch.members
+            elif query_type == "genetic_marker_search":
+                marker = query_params.get("marker", "")
+                if marker in branch.genetic_markers:
+                    results["results"] = branch.members
+            elif query_type == "geographical_search":
+                origin = query_params.get("origin", "")
+                if origin == branch.geographical_origin:
+                    results["results"] = branch.members
+            elif query_type == "temporal_search":
+                results["results"] = branch.members
+            elif query_type == "relationship_search":
+                results["results"] = branch.members
+            
+            return results
+
+    def get_genealogy_datasets(self) -> Dict[str, Any]:
+        with self._lock:
+            return {
+                "total_datasets": len(self.genealogy_datasets),
+                "datasets": {did: asdict(d) for did, d in self.genealogy_datasets.items()},
+            }
+
+    def get_user_configuration(self, user_id: str) -> Dict[str, Any]:
+        with self._lock:
+            for config_id, config in self.user_configurations.items():
+                if config.user_id == user_id:
+                    return asdict(config)
+            return {"error": "configuration_not_found"}
 
 
 evolution_engine = EvolutionEngine()

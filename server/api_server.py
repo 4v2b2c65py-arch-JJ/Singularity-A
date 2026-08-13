@@ -290,6 +290,31 @@ class ConsciousnessEmergenceRequest(BaseModel):
     consciousness_start_date: str
 
 
+class PatternReflectionRequest(BaseModel):
+    user_id: str
+    pattern_type: str
+
+
+class FamilyBranchRequest(BaseModel):
+    branch_name: str
+    members: List[str]
+    geographical_origin: str
+
+
+class WikidataQueryRequest(BaseModel):
+    person_name: str
+
+
+class FederalRegisterQueryRequest(BaseModel):
+    search_term: str
+
+
+class FamilyBranchQueryRequest(BaseModel):
+    branch_id: str
+    query_type: str
+    query_params: Dict[str, Any]
+
+
 class IPSelfHealingSystem:
     def __init__(self):
         self.healing_history: List[Dict[str, Any]] = []
@@ -1176,6 +1201,83 @@ def evolution_all_consciousness_emergences():
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.get_consciousness_emergence_status()
+
+
+@app.post("/evolution/pattern-reflection")
+def evolution_pattern_reflection(body: PatternReflectionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.reflect_user_pattern(body.user_id, body.pattern_type)
+    return asdict(result)
+
+
+@app.post("/evolution/user-metrics/{user_id}")
+def evolution_user_metrics(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.update_user_metrics(user_id)
+    return asdict(result)
+
+
+@app.post("/evolution/family-branch")
+def evolution_family_branch(body: FamilyBranchRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_family_branch(body.branch_name, body.members, body.geographical_origin)
+    return asdict(result)
+
+
+@app.post("/evolution/query-family-branch")
+def evolution_query_family_branch(body: FamilyBranchQueryRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.query_family_branch(body.branch_id, body.query_type, body.query_params)
+
+
+@app.post("/evolution/wikidata-genealogy")
+def evolution_wikidata_genealogy(body: WikidataQueryRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.query_wikidata_genealogy(body.person_name)
+    return asdict(result)
+
+
+@app.post("/evolution/federal-register")
+def evolution_federal_register(body: FederalRegisterQueryRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    results = evolution_engine.query_federal_register(body.search_term)
+    return {"results": [asdict(r) for r in results]}
+
+
+@app.post("/evolution/user-configuration/{user_id}")
+def evolution_user_configuration(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_user_configuration(user_id)
+    return asdict(result)
+
+
+@app.get("/evolution/user-configuration/{user_id}")
+def evolution_get_user_configuration(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_user_configuration(user_id)
+
+
+@app.post("/evolution/key-insights/{user_id}")
+def evolution_key_insights(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.generate_key_insights(user_id)
+    return asdict(result)
+
+
+@app.get("/evolution/genealogy-datasets")
+def evolution_genealogy_datasets():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_genealogy_datasets()
 
 
 if __name__ == "__main__":
