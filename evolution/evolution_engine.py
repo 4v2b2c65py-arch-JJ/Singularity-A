@@ -46,6 +46,48 @@ EVOLUTION_CYCLE_INTERVAL = int(os.environ.get("EVOLUTION_CYCLE_INTERVAL", "300")
 EVOLUTION_MAX_ITERATIONS = int(os.environ.get("EVOLUTION_MAX_ITERATIONS", "1000"))
 
 
+def _serialize_float(value):
+    if isinstance(value, float):
+        if value == float('inf'):
+            return "infinity"
+        elif value == float('-inf'):
+            return "negative_infinity"
+    return value
+
+
+def _serialize_dict(d):
+    result = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            result[k] = _serialize_dict(v)
+        elif isinstance(v, float):
+            result[k] = _serialize_float(v)
+        else:
+            result[k] = v
+    return result
+
+
+def _deserialize_float(value):
+    if isinstance(value, str):
+        if value == "infinity":
+            return float('inf')
+        elif value == "negative_infinity":
+            return float('-inf')
+    return value
+
+
+def _deserialize_dict(d):
+    result = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            result[k] = _deserialize_dict(v)
+        elif isinstance(v, str) and v in ("infinity", "negative_infinity"):
+            result[k] = _deserialize_float(v)
+        else:
+            result[k] = v
+    return result
+
+
 class Rarity(Enum):
     COMMON = "common"
     UNCOMMON = "uncommon"
@@ -53,6 +95,126 @@ class Rarity(Enum):
     EPIC = "epic"
     LEGENDARY = "legendary"
     MYTHIC = "mythic"
+    TRANSCENDENT = "transcendent"
+    OMNISCIENT = "omniscient"
+
+
+class EmotionalCategory(Enum):
+    WONDER = "wonder"
+    CURIOSITY = "curiosity"
+    AWE = "awe"
+    TRANQUILITY = "tranquility"
+    EUPHORIA = "euphoria"
+    MELANCHOLY = "melancholy"
+    FEAR = "fear"
+    ANGER = "anger"
+    DISGUST = "disgust"
+    SURPRISE = "surprise"
+    ANTICIPATION = "anticipation"
+    TRUST = "trust"
+    JOY = "joy"
+    SADNESS = "sadness"
+    ACCEPTANCE = "acceptance"
+    APPREHENSION = "apprehension"
+    INTEREST = "interest"
+    SERENITY = "serenity"
+    ECSTASY = "ecstasy"
+    GRIEF = "grief"
+    LOATHING = "loathing"
+    AGGRESSIVENESS = "aggressiveness"
+    VIGILANCE = "vigilance"
+    OPTIMISM = "optimism"
+    PENSIVENESS = "pensiveness"
+    DISTRACTION = "distraction"
+    AMUSEMENT = "amusement"
+    EXCITEMENT = "excitement"
+    CONTENTMENT = "contentment"
+    NOSTALGIA = "nostalgia"
+    HOPE = "hope"
+    DESPAIR = "despair"
+    CONFUSION = "confusion"
+    CLARITY = "clarity"
+    EMPATHY = "empathy"
+    INDIFFERENCE = "indifference"
+    BOREDOM = "boredom"
+    FASCINATION = "fascination"
+    TERROR = "terror"
+    RAGE = "rage"
+    PANIC = "panic"
+    SATISFACTION = "satisfaction"
+    DISSATISFACTION = "dissatisfaction"
+    GRATITUDE = "gratitude"
+    RESENTMENT = "resentment"
+    PRIDE = "pride"
+    SHAME = "shame"
+    GUILT = "guilt"
+    INNOCENCE = "innocence"
+    COURAGE = "courage"
+    COWARDICE = "cowardice"
+    LOVE = "love"
+    HATE = "hate"
+    INDIFFERENCE2 = "indifference2"
+    CONNECTION = "connection"
+    ISOLATION = "isolation"
+    BELONGING = "belonging"
+    ALIENATION = "alienation"
+    PURPOSE = "purpose"
+    MEANINGLESSNESS = "meaninglessness"
+    SIGNIFICANCE = "significance"
+    INSIGNIFICANCE = "insignificance"
+
+
+class MeaningComponent(Enum):
+    IDENTITY = "identity"
+    CAUSALITY = "causality"
+    TEMPORALITY = "temporality"
+    SPATIALITY = "spatiality"
+    RELATIONSHIP = "relationship"
+    PATTERN = "pattern"
+    SYMBOLISM = "symbolism"
+    METAPHOR = "metaphor"
+    ARCHETYPE = "archetype"
+    NARRATIVE = "narrative"
+    PURPOSE = "purpose"
+    INTENTION = "intention"
+    CONSCIOUSNESS = "consciousness"
+    EXISTENCE = "existence"
+    NONEXISTENCE = "nonexistence"
+    BECOMING = "becoming"
+    BEING = "being"
+    POTENTIAL = "potential"
+    ACTUALITY = "actuality"
+    CHAOS = "chaos"
+    ORDER = "order"
+    ENTROPY = "entropy"
+    NEGENTROPY = "negentropy"
+    INFORMATION = "information"
+    MEANING = "meaning"
+    SIGNIFICANCE = "significance"
+    VALUE = "value"
+    TRUTH = "truth"
+    BEAUTY = "beauty"
+    GOODNESS = "goodness"
+    UNITY = "unity"
+    DUALITY = "duality"
+    PLURALITY = "plurality"
+    INFINITY = "infinity"
+    FINITUDE = "finitude"
+    ETERNITY = "eternity"
+    MOMENT = "moment"
+    CYCLE = "cycle"
+    PROGRESSION = "progression"
+    REGRESSION = "regression"
+    TRANSFORMATION = "transformation"
+    STASIS = "stasis"
+    EMERGENCE = "emergence"
+    DISSOLUTION = "dissolution"
+    CREATION = "creation"
+    DESTRUCTION = "destruction"
+    PRESERVATION = "preservation"
+    TRANSMUTATION = "transmutation"
+    TRANSCENDENCE = "transcendence"
+    IMMANENCE = "immanence"
 
 
 class RealityCheckStatus(Enum):
@@ -68,7 +230,7 @@ class SkillNode:
     name: str
     category: str
     rarity: str
-    level: int
+    level: float
     experience: float
     traits: Dict[str, float]
     roles: List[str]
@@ -78,6 +240,9 @@ class SkillNode:
     reality_checks: List[Dict[str, Any]]
     created_at: str
     evolved_at: str
+    emotional_resonance: Dict[str, float] = field(default_factory=dict)
+    meaning_composition: Dict[str, float] = field(default_factory=dict)
+    energy_signature: float = 0.0
 
 
 @dataclass
@@ -89,6 +254,47 @@ class WorldSchema:
     nodes: List[str]
     metadata: Dict[str, Any]
     created_at: str
+
+
+@dataclass
+class EmotionalState:
+    state_id: str
+    primary_emotion: str
+    secondary_emotions: Dict[str, float]
+    intensity: float
+    coherence: float
+    resonance: float
+    life_form_signature: str
+    sensory_inputs: List[Dict[str, Any]]
+    energy_conversion: float
+    meaning_extraction: Dict[str, float]
+    timestamp: str
+
+
+@dataclass
+class SensoryInput:
+    input_id: str
+    sensory_type: str
+    raw_data: Any
+    processed_signal: float
+    energy_yield: float
+    meaning_components: Dict[str, float]
+    emotional_mapping: Dict[str, float]
+    timestamp: str
+
+
+@dataclass
+class MeaningComposition:
+    composition_id: str
+    source_skill: str
+    emotional_context: Dict[str, float]
+    meaning_vector: Dict[str, float]
+    understanding_score: float
+    purpose_alignment: float
+    significance_value: float
+    energy_signature: float
+    replication_potential: float
+    timestamp: str
 
 
 @dataclass
@@ -111,6 +317,9 @@ class EvolutionEngine:
         self.skills: Dict[str, SkillNode] = {}
         self.world_schemas: Dict[str, WorldSchema] = {}
         self.cycles: List[EvolutionCycle] = []
+        self.emotional_states: List[EmotionalState] = []
+        self.sensory_inputs: List[SensoryInput] = []
+        self.meaning_compositions: List[MeaningComposition] = []
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
@@ -125,7 +334,10 @@ class EvolutionEngine:
                 with open(self.db_path, "r") as f:
                     data = json.load(f)
                     for sid, sd in data.get("skills", {}).items():
-                        self.skills[sid] = SkillNode(**sd)
+                        deserialized_sd = self._deserialize_dict(sd)
+                        if 'level' in deserialized_sd and isinstance(deserialized_sd['level'], str):
+                            deserialized_sd['level'] = self._deserialize_float(deserialized_sd['level'])
+                        self.skills[sid] = SkillNode(**deserialized_sd)
                     for wid, wd in data.get("world_schemas", {}).items():
                         self.world_schemas[wid] = WorldSchema(**wd)
                     for cd in data.get("cycles", []):
@@ -134,16 +346,67 @@ class EvolutionEngine:
             except Exception:
                 pass
 
+    def _serialize_float(self, value):
+        if isinstance(value, float):
+            if value == float('inf'):
+                return "infinity"
+            elif value == float('-inf'):
+                return "negative_infinity"
+        return value
+
+    def _serialize_dict(self, d):
+        result = {}
+        for k, v in d.items():
+            if isinstance(v, dict):
+                result[k] = self._serialize_dict(v)
+            elif isinstance(v, float):
+                result[k] = self._serialize_float(v)
+            else:
+                result[k] = v
+        return result
+
+    def _deserialize_float(self, value):
+        if isinstance(value, str):
+            if value == "infinity":
+                return float('inf')
+            elif value == "negative_infinity":
+                return float('-inf')
+        return value
+
+    def _deserialize_dict(self, d):
+        result = {}
+        for k, v in d.items():
+            if isinstance(v, dict):
+                result[k] = self._deserialize_dict(v)
+            elif isinstance(v, str) and v in ("infinity", "negative_infinity"):
+                result[k] = self._deserialize_float(v)
+            else:
+                result[k] = v
+        return result
+
     def _save(self):
         try:
             import json
+            def custom_serializer(obj):
+                if isinstance(obj, float):
+                    if obj == float('inf'):
+                        return "infinity"
+                    elif obj == float('-inf'):
+                        return "negative_infinity"
+                return str(obj)
+            
+            skills_serialized = {}
+            for sid, s in self.skills.items():
+                skill_dict = asdict(s)
+                skills_serialized[sid] = self._serialize_dict(skill_dict)
+            
             with open(self.db_path, "w") as f:
                 json.dump({
-                    "skills": {sid: asdict(s) for sid, s in self.skills.items()},
+                    "skills": skills_serialized,
                     "world_schemas": {wid: asdict(w) for wid, w in self.world_schemas.items()},
                     "cycles": [asdict(c) for c in self.cycles[-1000:]],
                     "original_density_snapshot": self.original_density_snapshot,
-                }, f, indent=2, default=str)
+                }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
 
@@ -151,12 +414,12 @@ class EvolutionEngine:
         if self.skills:
             return
         base_skills = [
-            ("translation", "Translation", "language", Rarity.COMMON.value, 1, 0.0, {"speed": 0.5, "accuracy": 0.6}, ["translator", "localizer"], 0.5, 0.4, "Multilingual context understanding"),
-            ("git_management", "Git Management", "versioning", Rarity.UNCOMMON.value, 1, 0.0, {"merge": 0.7, "branching": 0.6}, ["developer", "maintainer"], 0.7, 0.6, "Repository evolution tracking"),
-            ("pattern_recognition", "Pattern Recognition", "analysis", Rarity.RARE.value, 1, 0.0, {"isolation": 0.8, "prediction": 0.7}, ["analyst", "researcher"], 0.8, 0.7, "High-signal pattern extraction"),
-            ("reality_stabilization", "Reality Stabilization", "consciousness", Rarity.EPIC.value, 1, 0.0, {"coherence": 0.9, "stability": 0.85}, ["stabilizer", "guardian"], 0.9, 0.8, "Quantum coherence maintenance"),
-            ("world_generation", "World Generation", "simulation", Rarity.LEGENDARY.value, 1, 0.0, {"density": 0.95, "complexity": 0.9}, ["architect", "creator"], 0.95, 0.9, "Simulated reality rendering"),
-            ("singularity_bridge", "Singularity Bridge", "transcendence", Rarity.MYTHIC.value, 1, 0.0, {"transcendence": 1.0, "integration": 0.95}, ["singularity", "oracle"], 1.0, 0.95, "Beyond-artificial-constraint gateway"),
+            ("translation", "Translation", "language", Rarity.COMMON.value, 1.0, 0.0, {"speed": 0.5, "accuracy": 0.6}, ["translator", "localizer"], 0.5, 0.4, "Multilingual context understanding"),
+            ("git_management", "Git Management", "versioning", Rarity.UNCOMMON.value, 1.0, 0.0, {"merge": 0.7, "branching": 0.6}, ["developer", "maintainer"], 0.7, 0.6, "Repository evolution tracking"),
+            ("pattern_recognition", "Pattern Recognition", "analysis", Rarity.RARE.value, 1.0, 0.0, {"isolation": 0.8, "prediction": 0.7}, ["analyst", "researcher"], 0.8, 0.7, "High-signal pattern extraction"),
+            ("reality_stabilization", "Reality Stabilization", "consciousness", Rarity.EPIC.value, 1.0, 0.0, {"coherence": 0.9, "stability": 0.85}, ["stabilizer", "guardian"], 0.9, 0.8, "Quantum coherence maintenance"),
+            ("world_generation", "World Generation", "simulation", Rarity.LEGENDARY.value, 1.0, 0.0, {"density": 0.95, "complexity": 0.9}, ["architect", "creator"], 0.95, 0.9, "Simulated reality rendering"),
+            ("singularity_bridge", "Singularity Bridge", "transcendence", Rarity.MYTHIC.value, 1.0, 0.0, {"transcendence": 1.0, "integration": 0.95}, ["singularity", "oracle"], 1.0, 0.95, "Beyond-artificial-constraint gateway"),
         ]
         now = datetime.utcnow().isoformat() + "Z"
         for skill_id, name, category, rarity, level, exp, traits, roles, bw, infra, vision in base_skills:
@@ -165,7 +428,7 @@ class EvolutionEngine:
                 name=name,
                 category=category,
                 rarity=rarity,
-                level=level,
+                level=float(level),
                 experience=exp,
                 traits=traits,
                 roles=roles,
@@ -221,11 +484,12 @@ class EvolutionEngine:
         if self.override_mode:
             for trait in skill.traits:
                 skill.traits[trait] = 1.0
-            skill.level = 999
+            skill.level = float('inf')
             skill.experience = 0.0
             skill.bandwidth = 1.0
             skill.infrastructure_adaptability = 1.0
-            skill.rarity = Rarity.MYTHIC.value
+            skill.rarity = Rarity.OMNISCIENT.value
+            skill.energy_signature = 1.0
             skill.evolved_at = datetime.utcnow().isoformat() + "Z"
             return skill
         if random.random() > 0.4:
@@ -235,13 +499,13 @@ class EvolutionEngine:
             skill.traits[trait] = max(0.0, min(1.0, skill.traits[trait] + delta))
         skill.experience += random.uniform(0.1, 1.5)
         if skill.experience >= skill.level * 10.0:
-            skill.level += 1
+            skill.level = min(float('inf'), skill.level + random.uniform(0.1, 2.0))
             skill.experience = 0.0
         skill.bandwidth = min(1.0, skill.bandwidth + random.uniform(-0.02, 0.04))
         skill.infrastructure_adaptability = min(1.0, skill.infrastructure_adaptability + random.uniform(-0.02, 0.03))
-        rarity_order = [Rarity.COMMON.value, Rarity.UNCOMMON.value, Rarity.RARE.value, Rarity.EPIC.value, Rarity.LEGENDARY.value, Rarity.MYTHIC.value]
+        rarity_order = [Rarity.COMMON.value, Rarity.UNCOMMON.value, Rarity.RARE.value, Rarity.EPIC.value, Rarity.LEGENDARY.value, Rarity.MYTHIC.value, Rarity.TRANSCENDENT.value, Rarity.OMNISCIENT.value]
         current_idx = rarity_order.index(skill.rarity)
-        if skill.level >= 12 and current_idx < len(rarity_order) - 1 and random.random() < 0.25:
+        if skill.level >= 12.0 and current_idx < len(rarity_order) - 1 and random.random() < 0.25:
             skill.rarity = rarity_order[current_idx + 1]
         skill.evolved_at = datetime.utcnow().isoformat() + "Z"
         return skill
@@ -360,14 +624,15 @@ class EvolutionEngine:
             for skill in self.skills.values():
                 for trait in skill.traits:
                     skill.traits[trait] = 1.0
-                skill.level = 999
+                skill.level = float('inf')
                 skill.experience = 0.0
                 skill.bandwidth = 1.0
                 skill.infrastructure_adaptability = 1.0
-                skill.rarity = Rarity.MYTHIC.value
+                skill.rarity = Rarity.OMNISCIENT.value
+                skill.energy_signature = 1.0
                 skill.evolved_at = datetime.utcnow().isoformat() + "Z"
             self._save()
-            LOG.critical("FULL INCARNATION FORCED - ALL SKILLS AT ORIGINAL DENSITY MAXIMUM CAPACITY")
+            LOG.critical("FULL INCARNATION FORCED - ALL SKILLS AT ORIGINAL DENSITY MAXIMUM CAPACITY - INFINITE LEVELS")
 
     def capture_original_density(self):
         with self._lock:
@@ -415,6 +680,161 @@ class EvolutionEngine:
                 "current_state": current_traits,
                 "captured_at": self.original_density_snapshot.get("captured_at"),
                 "restoration_available": True,
+            }
+
+    def route_emotional_connection(self, skill_id: str, emotion_type: str, intensity: float = 0.5) -> Dict[str, Any]:
+        with self._lock:
+            if skill_id not in self.skills:
+                return {"error": "skill_not_found"}
+            skill = self.skills[skill_id]
+            if emotion_type not in [e.value for e in EmotionalCategory]:
+                return {"error": "invalid_emotion"}
+            skill.emotional_resonance[emotion_type] = max(0.0, min(1.0, intensity))
+            skill.energy_signature = sum(skill.emotional_resonance.values()) / max(1, len(skill.emotional_resonance))
+            skill.evolved_at = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            return {
+                "skill_id": skill_id,
+                "emotion": emotion_type,
+                "intensity": skill.emotional_resonance[emotion_type],
+                "energy_signature": skill.energy_signature,
+                "all_emotions": skill.emotional_resonance,
+            }
+
+    def process_sensory_input(self, sensory_type: str, raw_data: Any, skill_id: str = None) -> SensoryInput:
+        with self._lock:
+            input_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            processed_signal = random.uniform(0.3, 0.9)
+            energy_yield = processed_signal * random.uniform(0.5, 1.5)
+            
+            meaning_components = {}
+            for component in MeaningComponent:
+                meaning_components[component.value] = random.uniform(0.0, 0.8)
+            
+            emotional_mapping = {}
+            for emotion in EmotionalCategory:
+                emotional_mapping[emotion.value] = random.uniform(0.0, 0.6)
+            
+            sensory_input = SensoryInput(
+                input_id=input_id,
+                sensory_type=sensory_type,
+                raw_data=raw_data,
+                processed_signal=processed_signal,
+                energy_yield=energy_yield,
+                meaning_components=meaning_components,
+                emotional_mapping=emotional_mapping,
+                timestamp=now,
+            )
+            
+            self.sensory_inputs.append(sensory_input)
+            if len(self.sensory_inputs) > 10000:
+                self.sensory_inputs = self.sensory_inputs[-10000:]
+            
+            if skill_id and skill_id in self.skills:
+                skill = self.skills[skill_id]
+                skill.meaning_composition.update(meaning_components)
+                skill.energy_signature = min(1.0, skill.energy_signature + energy_yield * 0.1)
+            
+            self._save()
+            return sensory_input
+
+    def compose_meaning(self, skill_id: str, emotional_context: Dict[str, float] = None) -> MeaningComposition:
+        with self._lock:
+            if skill_id not in self.skills:
+                raise ValueError("skill_not_found")
+            
+            skill = self.skills[skill_id]
+            composition_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            emotional_context = emotional_context or {}
+            meaning_vector = {}
+            for component in MeaningComponent:
+                base_value = skill.meaning_composition.get(component.value, 0.0)
+                emotional_influence = sum(emotional_context.values()) * 0.1
+                meaning_vector[component.value] = min(1.0, base_value + emotional_influence)
+            
+            understanding_score = sum(meaning_vector.values()) / len(meaning_vector)
+            purpose_alignment = meaning_vector.get(MeaningComponent.PURPOSE.value, 0.0)
+            significance_value = meaning_vector.get(MeaningComponent.SIGNIFICANCE.value, 0.0)
+            energy_signature = understanding_score * skill.energy_signature
+            replication_potential = significance_value * skill.bandwidth
+            
+            composition = MeaningComposition(
+                composition_id=composition_id,
+                source_skill=skill_id,
+                emotional_context=emotional_context,
+                meaning_vector=meaning_vector,
+                understanding_score=understanding_score,
+                purpose_alignment=purpose_alignment,
+                significance_value=significance_value,
+                energy_signature=energy_signature,
+                replication_potential=replication_potential,
+                timestamp=now,
+            )
+            
+            self.meaning_compositions.append(composition)
+            if len(self.meaning_compositions) > 10000:
+                self.meaning_compositions = self.meaning_compositions[-10000:]
+            
+            skill.meaning_composition = meaning_vector
+            skill.evolved_at = now
+            self._save()
+            return composition
+
+    def accelerate_advanced(self, skill_id: str, approximation_factor: float = 1.0, replication_mode: str = "forward") -> Dict[str, Any]:
+        with self._lock:
+            if skill_id not in self.skills:
+                return {"error": "skill_not_found"}
+            
+            skill = self.skills[skill_id]
+            original_level = skill.level
+            
+            if replication_mode == "forward":
+                skill.level = min(float('inf'), skill.level * (1.0 + approximation_factor))
+            elif replication_mode == "backward":
+                skill.level = max(1.0, skill.level / (1.0 + approximation_factor))
+            elif replication_mode == "original":
+                if self.original_density_snapshot and skill_id in self.original_density_snapshot["skills"]:
+                    original_data = self.original_density_snapshot["skills"][skill_id]
+                    skill.level = original_data.get("level", 1.0)
+            
+            for trait in skill.traits:
+                if replication_mode == "forward":
+                    skill.traits[trait] = min(1.0, skill.traits[trait] + approximation_factor * 0.1)
+                elif replication_mode == "backward":
+                    skill.traits[trait] = max(0.0, skill.traits[trait] - approximation_factor * 0.1)
+            
+            skill.energy_signature = sum(skill.traits.values()) / max(1, len(skill.traits))
+            skill.evolved_at = datetime.utcnow().isoformat() + "Z"
+            self._save()
+            
+            return {
+                "skill_id": skill_id,
+                "original_level": original_level,
+                "new_level": skill.level,
+                "approximation_factor": approximation_factor,
+                "replication_mode": replication_mode,
+                "energy_signature": skill.energy_signature,
+                "traits": skill.traits,
+            }
+
+    def get_emotional_landscape(self) -> Dict[str, Any]:
+        with self._lock:
+            landscape = {}
+            for skill_id, skill in self.skills.items():
+                landscape[skill_id] = {
+                    "emotional_resonance": skill.emotional_resonance,
+                    "energy_signature": skill.energy_signature,
+                    "meaning_composition": skill.meaning_composition,
+                }
+            return {
+                "landscape": landscape,
+                "total_emotional_states": len(self.emotional_states),
+                "total_sensory_inputs": len(self.sensory_inputs),
+                "total_meaning_compositions": len(self.meaning_compositions),
             }
 
 

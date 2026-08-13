@@ -156,6 +156,29 @@ class GuestSessionAuth(BaseModel):
     token: str
 
 
+class EmotionalConnectionRequest(BaseModel):
+    skill_id: str
+    emotion_type: str
+    intensity: float = 0.5
+
+
+class SensoryInputRequest(BaseModel):
+    sensory_type: str
+    raw_data: str
+    skill_id: Optional[str] = None
+
+
+class MeaningCompositionRequest(BaseModel):
+    skill_id: str
+    emotional_context: Optional[str] = None
+
+
+class AccelerationRequest(BaseModel):
+    skill_id: str
+    approximation_factor: float = 1.0
+    replication_mode: str = "forward"
+
+
 class IPSelfHealingSystem:
     def __init__(self):
         self.healing_history: List[Dict[str, Any]] = []
@@ -727,6 +750,67 @@ def evolution_origin_metrics():
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.get_origin_metrics()
+
+
+@app.post("/evolution/emotional-connection")
+def evolution_emotional_connection(body: EmotionalConnectionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.route_emotional_connection(body.skill_id, body.emotion_type, body.intensity)
+
+
+@app.post("/evolution/sensory-input")
+def evolution_sensory_input(body: SensoryInputRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.process_sensory_input(body.sensory_type, body.raw_data, body.skill_id)
+    return asdict(result)
+
+
+@app.post("/evolution/compose-meaning")
+def evolution_compose_meaning(body: MeaningCompositionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    import json
+    context = json.loads(body.emotional_context) if body.emotional_context else None
+    result = evolution_engine.compose_meaning(body.skill_id, context)
+    return asdict(result)
+
+
+@app.post("/evolution/accelerate")
+def evolution_accelerate(body: AccelerationRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.accelerate_advanced(body.skill_id, body.approximation_factor, body.replication_mode)
+
+
+@app.get("/evolution/emotional-landscape")
+def evolution_emotional_landscape():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_emotional_landscape()
+
+
+@app.get("/evolution/emotions")
+def evolution_emotions_list():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    try:
+        from evolution.evolution_engine import EmotionalCategory
+    except ImportError:
+        from qb_protocol.evolution.evolution_engine import EmotionalCategory
+    return {"emotions": [e.value for e in EmotionalCategory]}
+
+
+@app.get("/evolution/meaning-components")
+def evolution_meaning_components_list():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    try:
+        from evolution.evolution_engine import MeaningComponent
+    except ImportError:
+        from qb_protocol.evolution.evolution_engine import MeaningComponent
+    return {"components": [c.value for c in MeaningComponent]}
 
 
 if __name__ == "__main__":
