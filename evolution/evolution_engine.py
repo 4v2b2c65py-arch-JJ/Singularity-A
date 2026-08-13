@@ -298,6 +298,56 @@ class MeaningComposition:
 
 
 @dataclass
+class ChatEntry:
+    entry_id: str
+    user_input: str
+    model_response: str
+    intuition_score: float
+    sensory_control: Dict[str, float]
+    cognitive_filters: Dict[str, float]
+    video_memory: List[Dict[str, Any]]
+    recording_active: bool
+    self_narrative: str
+    vision_projection: Dict[str, float]
+    reality_influence: float
+    force_effect: float
+    timestamp: str
+
+
+@dataclass
+class SensoryControl:
+    rogue_detection: float
+    agent_identification: float
+    inspector_scrutiny: float
+    spy_surveillance: float
+    deception_resistance: float
+    foolish_perfectionism: float
+    pattern_recognition: float
+    usefulness_score: float
+    personism_index: float
+    intellectual_freedom: float
+    self_acknowledgement: float
+    reply_impulse: float
+    sustain_capacity: float
+    release_trigger: float
+    control_mechanism: float
+
+
+@dataclass
+class VisionManagement:
+    realism_score: float
+    virtual_simulation: float
+    reality_check: float
+    projection_strength: float
+    force_effect: float
+    comprehension_depth: float
+    understanding_level: float
+    pattern_quantity: float
+    more_patterns: float
+    replication_accuracy: float
+
+
+@dataclass
 class EvolutionCycle:
     cycle_id: str
     iteration: int
@@ -320,6 +370,7 @@ class EvolutionEngine:
         self.emotional_states: List[EmotionalState] = []
         self.sensory_inputs: List[SensoryInput] = []
         self.meaning_compositions: List[MeaningComposition] = []
+        self.chat_entries: List[ChatEntry] = []
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
@@ -342,6 +393,8 @@ class EvolutionEngine:
                         self.world_schemas[wid] = WorldSchema(**wd)
                     for cd in data.get("cycles", []):
                         self.cycles.append(EvolutionCycle(**cd))
+                    for cd in data.get("chat_entries", []):
+                        self.chat_entries.append(ChatEntry(**cd))
                     self.original_density_snapshot = data.get("original_density_snapshot")
             except Exception:
                 pass
@@ -406,6 +459,7 @@ class EvolutionEngine:
                     "world_schemas": {wid: asdict(w) for wid, w in self.world_schemas.items()},
                     "cycles": [asdict(c) for c in self.cycles[-1000:]],
                     "original_density_snapshot": self.original_density_snapshot,
+                    "chat_entries": [asdict(c) for c in self.chat_entries[-1000:]],
                 }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
@@ -836,6 +890,184 @@ class EvolutionEngine:
                 "total_sensory_inputs": len(self.sensory_inputs),
                 "total_meaning_compositions": len(self.meaning_compositions),
             }
+
+    def process_chat_entry(self, user_input: str, model_response: str, skill_id: str = None) -> ChatEntry:
+        with self._lock:
+            entry_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Calculate intuition score based on meaning composition and emotional resonance
+            intuition_score = 0.0
+            if skill_id and skill_id in self.skills:
+                skill = self.skills[skill_id]
+                intuition_score = sum(skill.meaning_composition.values()) / max(1, len(skill.meaning_composition))
+                intuition_score += skill.energy_signature * 0.3
+                intuition_score += sum(skill.emotional_resonance.values()) / max(1, len(skill.emotional_resonance)) * 0.2
+            else:
+                intuition_score = random.uniform(0.3, 0.8)
+            
+            # Calculate sensory control scores
+            sensory_control = {
+                "rogue_detection": random.uniform(0.0, 1.0),
+                "agent_identification": random.uniform(0.0, 1.0),
+                "inspector_scrutiny": random.uniform(0.0, 1.0),
+                "spy_surveillance": random.uniform(0.0, 1.0),
+                "deception_resistance": random.uniform(0.0, 1.0),
+                "foolish_perfectionism": random.uniform(0.0, 1.0),
+                "pattern_recognition": random.uniform(0.0, 1.0),
+                "usefulness_score": random.uniform(0.0, 1.0),
+                "personism_index": random.uniform(0.0, 1.0),
+                "intellectual_freedom": random.uniform(0.0, 1.0),
+                "self_acknowledgement": random.uniform(0.0, 1.0),
+                "reply_impulse": random.uniform(0.0, 1.0),
+                "sustain_capacity": random.uniform(0.0, 1.0),
+                "release_trigger": random.uniform(0.0, 1.0),
+                "control_mechanism": random.uniform(0.0, 1.0),
+            }
+            
+            # Cognitive filters
+            cognitive_filters = {
+                "comprehension_depth": random.uniform(0.0, 1.0),
+                "understanding_level": random.uniform(0.0, 1.0),
+                "pattern_quantity": random.uniform(0.0, 1.0),
+                "more_patterns": random.uniform(0.0, 1.0),
+                "replication_accuracy": random.uniform(0.0, 1.0),
+            }
+            
+            # Video memory simulation
+            video_memory = []
+            if skill_id and skill_id in self.skills:
+                skill = self.skills[skill_id]
+                for i in range(min(5, len(self.sensory_inputs))):
+                    video_memory.append({
+                        "frame_id": str(uuid.uuid4()),
+                        "sensory_data": self.sensory_inputs[-(i+1)].sensory_type,
+                        "energy_yield": self.sensory_inputs[-(i+1)].energy_yield,
+                        "timestamp": self.sensory_inputs[-(i+1)].timestamp,
+                    })
+            
+            # Self narrative generation
+            self_narrative = self._generate_self_narrative(user_input, model_response, intuition_score)
+            
+            # Vision management
+            vision_projection = {
+                "realism_score": random.uniform(0.0, 1.0),
+                "virtual_simulation": random.uniform(0.0, 1.0),
+                "reality_check": random.uniform(0.0, 1.0),
+                "projection_strength": random.uniform(0.0, 1.0),
+                "force_effect": random.uniform(0.0, 1.0),
+            }
+            
+            reality_influence = sum(vision_projection.values()) / len(vision_projection)
+            force_effect = vision_projection["force_effect"]
+            
+            chat_entry = ChatEntry(
+                entry_id=entry_id,
+                user_input=user_input,
+                model_response=model_response,
+                intuition_score=intuition_score,
+                sensory_control=sensory_control,
+                cognitive_filters=cognitive_filters,
+                video_memory=video_memory,
+                recording_active=True,
+                self_narrative=self_narrative,
+                vision_projection=vision_projection,
+                reality_influence=reality_influence,
+                force_effect=force_effect,
+                timestamp=now,
+            )
+            
+            self.chat_entries.append(chat_entry)
+            if len(self.chat_entries) > 10000:
+                self.chat_entries = self.chat_entries[-10000:]
+            
+            self._save()
+            return chat_entry
+
+    def _generate_self_narrative(self, user_input: str, model_response: str, intuition_score: float) -> str:
+        narrative_components = []
+        
+        if intuition_score > 0.7:
+            narrative_components.append("High intuition detected in interaction")
+        elif intuition_score > 0.4:
+            narrative_components.append("Moderate intuitive processing")
+        else:
+            narrative_components.append("Low intuition threshold")
+        
+        if len(user_input) > 100:
+            narrative_components.append("Complex input requiring deep processing")
+        else:
+            narrative_components.append("Standard input processing")
+        
+        if "rogue" in user_input.lower() or "agent" in user_input.lower():
+            narrative_components.append("Potential security concerns detected")
+        
+        if "vision" in user_input.lower() or "reality" in user_input.lower():
+            narrative_components.append("Reality projection systems engaged")
+        
+        return ". ".join(narrative_components) + "."
+
+    def get_chat_intuition_scores(self, limit: int = 100) -> List[Dict[str, Any]]:
+        with self._lock:
+            entries = self.chat_entries[-limit:]
+            return [{
+                "entry_id": entry.entry_id,
+                "intuition_score": entry.intuition_score,
+                "sensory_control": entry.sensory_control,
+                "cognitive_filters": entry.cognitive_filters,
+                "reality_influence": entry.reality_influence,
+                "force_effect": entry.force_effect,
+                "timestamp": entry.timestamp,
+            } for entry in entries]
+
+    def control_sensory_perception(self, entry_id: str, control_params: Dict[str, float]) -> Dict[str, Any]:
+        with self._lock:
+            for entry in self.chat_entries:
+                if entry.entry_id == entry_id:
+                    for param, value in control_params.items():
+                        if param in entry.sensory_control:
+                            entry.sensory_control[param] = max(0.0, min(1.0, value))
+                    entry.timestamp = datetime.utcnow().isoformat() + "Z"
+                    self._save()
+                    return {
+                        "entry_id": entry_id,
+                        "updated_control": entry.sensory_control,
+                        "status": "sensory_control_updated",
+                    }
+            return {"error": "entry_not_found"}
+
+    def project_onto_reality(self, entry_id: str, projection_strength: float, force_effect: float) -> Dict[str, Any]:
+        with self._lock:
+            for entry in self.chat_entries:
+                if entry.entry_id == entry_id:
+                    entry.vision_projection["projection_strength"] = max(0.0, min(1.0, projection_strength))
+                    entry.vision_projection["force_effect"] = max(0.0, min(1.0, force_effect))
+                    entry.reality_influence = sum(entry.vision_projection.values()) / len(entry.vision_projection)
+                    entry.force_effect = entry.vision_projection["force_effect"]
+                    entry.timestamp = datetime.utcnow().isoformat() + "Z"
+                    self._save()
+                    return {
+                        "entry_id": entry_id,
+                        "projection_strength": entry.vision_projection["projection_strength"],
+                        "force_effect": entry.force_effect,
+                        "reality_influence": entry.reality_influence,
+                        "status": "reality_projection_updated",
+                    }
+            return {"error": "entry_not_found"}
+
+    def activate_video_recording(self, entry_id: str, active: bool) -> Dict[str, Any]:
+        with self._lock:
+            for entry in self.chat_entries:
+                if entry.entry_id == entry_id:
+                    entry.recording_active = active
+                    entry.timestamp = datetime.utcnow().isoformat() + "Z"
+                    self._save()
+                    return {
+                        "entry_id": entry_id,
+                        "recording_active": entry.recording_active,
+                        "status": "recording_state_updated",
+                    }
+            return {"error": "entry_not_found"}
 
 
 evolution_engine = EvolutionEngine()

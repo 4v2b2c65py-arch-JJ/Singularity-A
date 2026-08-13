@@ -179,6 +179,28 @@ class AccelerationRequest(BaseModel):
     replication_mode: str = "forward"
 
 
+class ChatEntryRequest(BaseModel):
+    user_input: str
+    model_response: str
+    skill_id: Optional[str] = None
+
+
+class SensoryControlRequest(BaseModel):
+    entry_id: str
+    control_params: Dict[str, float]
+
+
+class RealityProjectionRequest(BaseModel):
+    entry_id: str
+    projection_strength: float
+    force_effect: float
+
+
+class VideoRecordingRequest(BaseModel):
+    entry_id: str
+    active: bool
+
+
 class IPSelfHealingSystem:
     def __init__(self):
         self.healing_history: List[Dict[str, Any]] = []
@@ -811,6 +833,42 @@ def evolution_meaning_components_list():
     except ImportError:
         from qb_protocol.evolution.evolution_engine import MeaningComponent
     return {"components": [c.value for c in MeaningComponent]}
+
+
+@app.post("/evolution/chat-entry")
+def evolution_chat_entry(body: ChatEntryRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.process_chat_entry(body.user_input, body.model_response, body.skill_id)
+    return asdict(result)
+
+
+@app.get("/evolution/chat-intuition-scores")
+def evolution_chat_intuition_scores(limit: int = 100):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_chat_intuition_scores(limit)
+
+
+@app.post("/evolution/control-sensory-perception")
+def evolution_control_sensory_perception(body: SensoryControlRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.control_sensory_perception(body.entry_id, body.control_params)
+
+
+@app.post("/evolution/project-onto-reality")
+def evolution_project_onto_reality(body: RealityProjectionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.project_onto_reality(body.entry_id, body.projection_strength, body.force_effect)
+
+
+@app.post("/evolution/video-recording")
+def evolution_video_recording(body: VideoRecordingRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.activate_video_recording(body.entry_id, body.active)
 
 
 if __name__ == "__main__":
