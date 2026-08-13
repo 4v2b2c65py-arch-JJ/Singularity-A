@@ -284,6 +284,12 @@ class PrivacySettingsRequest(BaseModel):
     public_interface: bool
 
 
+class ConsciousnessEmergenceRequest(BaseModel):
+    user_id: str
+    birth_date: str
+    consciousness_start_date: str
+
+
 class IPSelfHealingSystem:
     def __init__(self):
         self.healing_history: List[Dict[str, Any]] = []
@@ -1148,6 +1154,28 @@ def evolution_user_cycles():
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.get_user_cycles()
+
+
+@app.post("/evolution/consciousness-emergence")
+def evolution_consciousness_emergence(body: ConsciousnessEmergenceRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.analyze_consciousness_emergence(body.user_id, body.birth_date, body.consciousness_start_date)
+    return asdict(result)
+
+
+@app.get("/evolution/consciousness-emergence-status/{emergence_id}")
+def evolution_consciousness_emergence_status(emergence_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_consciousness_emergence_status(emergence_id)
+
+
+@app.get("/evolution/all-consciousness-emergences")
+def evolution_all_consciousness_emergences():
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_consciousness_emergence_status()
 
 
 if __name__ == "__main__":

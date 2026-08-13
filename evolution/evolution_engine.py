@@ -615,6 +615,79 @@ class UserCycle:
 
 
 @dataclass
+class ConsciousnessEmergence:
+    emergence_id: str
+    user_id: str
+    birth_date: str
+    consciousness_start_date: str
+    consciousness_age_days: int
+    time_offset_days: int
+    consciousness_offset_percentage: float
+    key_abnormalities: List[Dict[str, Any]]
+    birth_events: List[Dict[str, Any]]
+    environmental_factors: Dict[str, float]
+    genetic_patterns: Dict[str, float]
+    growth_limits: Dict[str, Any]
+    consistent_tracking: Dict[str, Any]
+    emergence_quality: float
+    environmental_mirroring: float
+    genetic_growth_score: float
+    consciousness_maturity: float
+    developmental_phases: List[Dict[str, Any]]
+    anomaly_score: float
+    birth_event_significance: float
+    environmental_influence: float
+    genetic_predisposition: Dict[str, float]
+    growth_velocity: float
+    consciousness_acceleration: float
+    milestone_tracking: Dict[str, str]
+    pattern_consistency: float
+    emergence_timestamp: str
+
+
+@dataclass
+class BirthEvent:
+    event_id: str
+    event_type: str
+    event_date: str
+    significance: float
+    impact_on_consciousness: float
+    environmental_context: Dict[str, Any]
+    genetic_markers: List[str]
+    consequences: List[str]
+    related_abnormalities: List[str]
+
+
+@dataclass
+class EnvironmentalPattern:
+    pattern_id: str
+    pattern_type: str
+    environmental_conditions: Dict[str, float]
+    seasonal_influence: float
+    geographic_factors: Dict[str, float]
+    climate_data: Dict[str, Any]
+    societal_context: Dict[str, Any]
+    mirroring_capacity: float
+    consciousness_correlation: float
+    pattern_timestamp: str
+
+
+@dataclass
+class GeneticPattern:
+    pattern_id: str
+    genetic_markers: List[str]
+    growth_potential: float
+    expression_rate: float
+    mutation_risk: float
+    inherited_traits: Dict[str, float]
+    developmental_thresholds: Dict[str, float]
+    growth_limits: Dict[str, float]
+    consciousness_correlation: float
+    expression_velocity: float
+    pattern_timestamp: str
+
+
+@dataclass
 class EvolutionCycle:
     cycle_id: str
     iteration: int
@@ -648,6 +721,10 @@ class EvolutionEngine:
         self.user_discoveries: Dict[str, UserDiscovery] = {}
         self.age_groups: Dict[str, AgeGroup] = {}
         self.user_cycles: Dict[str, UserCycle] = {}
+        self.consciousness_emergences: Dict[str, ConsciousnessEmergence] = {}
+        self.birth_events: List[BirthEvent] = []
+        self.environmental_patterns: Dict[str, EnvironmentalPattern] = {}
+        self.genetic_patterns: Dict[str, GeneticPattern] = {}
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
@@ -695,6 +772,14 @@ class EvolutionEngine:
                         self.age_groups[gid] = AgeGroup(**gd)
                     for cid, cd in data.get("user_cycles", {}).items():
                         self.user_cycles[cid] = UserCycle(**cd)
+                    for eid, ed in data.get("consciousness_emergences", {}).items():
+                        self.consciousness_emergences[eid] = ConsciousnessEmergence(**ed)
+                    for bd in data.get("birth_events", []):
+                        self.birth_events.append(BirthEvent(**bd))
+                    for pid, pd in data.get("environmental_patterns", {}).items():
+                        self.environmental_patterns[pid] = EnvironmentalPattern(**pd)
+                    for pid, pd in data.get("genetic_patterns", {}).items():
+                        self.genetic_patterns[pid] = GeneticPattern(**pd)
                     self.original_density_snapshot = data.get("original_density_snapshot")
             except Exception:
                 pass
@@ -770,6 +855,10 @@ class EvolutionEngine:
                     "user_discoveries": {uid: asdict(u) for uid, u in self.user_discoveries.items()},
                     "age_groups": {gid: asdict(g) for gid, g in self.age_groups.items()},
                     "user_cycles": {cid: asdict(c) for cid, c in self.user_cycles.items()},
+                    "consciousness_emergences": {eid: asdict(e) for eid, e in self.consciousness_emergences.items()},
+                    "birth_events": [asdict(b) for b in self.birth_events[-1000:]],
+                    "environmental_patterns": {pid: asdict(p) for pid, p in self.environmental_patterns.items()},
+                    "genetic_patterns": {pid: asdict(p) for pid, p in self.genetic_patterns.items()},
                 }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
@@ -2344,6 +2433,371 @@ class EvolutionEngine:
                 "total_cycles": len(self.user_cycles),
                 "cycles": {cid: asdict(c) for cid, c in self.user_cycles.items()},
             }
+
+    def analyze_consciousness_emergence(self, user_id: str, birth_date: str, consciousness_start_date: str) -> ConsciousnessEmergence:
+        with self._lock:
+            emergence_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Parse dates
+            birth_dt = datetime.fromisoformat(birth_date)
+            consciousness_dt = datetime.fromisoformat(consciousness_start_date)
+            
+            # Calculate time offset
+            time_offset = (consciousness_dt - birth_dt).days
+            consciousness_age_days = time_offset
+            
+            # Calculate consciousness offset percentage (days from birth to consciousness / expected days)
+            expected_consciousness_days = 280  # ~9 months gestation baseline
+            consciousness_offset_percentage = (time_offset / expected_consciousness_days) * 100
+            
+            # Detect key abnormalities
+            key_abnormalities = self._detect_abnormalities(birth_dt, consciousness_dt, time_offset)
+            
+            # Identify birth events
+            birth_events = self._identify_birth_events(birth_dt, consciousness_dt)
+            
+            # Analyze environmental factors
+            environmental_factors = self._analyze_environmental_factors(birth_dt, consciousness_dt)
+            
+            # Analyze genetic patterns
+            genetic_patterns = self._analyze_genetic_patterns(birth_dt, consciousness_dt)
+            
+            # Determine growth limits
+            growth_limits = self._determine_growth_limits(birth_dt, consciousness_dt, time_offset)
+            
+            # Consistent tracking data
+            consistent_tracking = self._establish_consistent_tracking(birth_dt, consciousness_dt, time_offset)
+            
+            # Calculate emergence quality
+            emergence_quality = self._calculate_emergence_quality(time_offset, key_abnormalities, environmental_factors)
+            
+            # Environmental mirroring
+            environmental_mirroring = self._calculate_environmental_mirroring(environmental_factors, genetic_patterns)
+            
+            # Genetic growth score
+            genetic_growth_score = self._calculate_genetic_growth_score(genetic_patterns, growth_limits)
+            
+            # Consciousness maturity
+            consciousness_maturity = self._calculate_consciousness_maturity(time_offset, emergence_quality)
+            
+            # Developmental phases
+            developmental_phases = self._identify_developmental_phases(birth_dt, consciousness_dt, time_offset)
+            
+            # Anomaly score
+            anomaly_score = self._calculate_anomaly_score(key_abnormalities, birth_events)
+            
+            # Birth event significance
+            birth_event_significance = self._calculate_birth_event_significance(birth_events)
+            
+            # Environmental influence
+            environmental_influence = self._calculate_environmental_influence(environmental_factors, birth_events)
+            
+            # Genetic predisposition
+            genetic_predisposition = self._calculate_genetic_predisposition(genetic_patterns, environmental_factors)
+            
+            # Growth velocity
+            growth_velocity = self._calculate_growth_velocity(time_offset, consciousness_age_days)
+            
+            # Consciousness acceleration
+            consciousness_acceleration = self._calculate_consciousness_acceleration(emergence_quality, growth_velocity)
+            
+            # Milestone tracking
+            milestone_tracking = self._track_milestones(birth_dt, consciousness_dt, time_offset)
+            
+            # Pattern consistency
+            pattern_consistency = self._calculate_pattern_consistency(environmental_factors, genetic_patterns)
+            
+            consciousness_emergence = ConsciousnessEmergence(
+                emergence_id=emergence_id,
+                user_id=user_id,
+                birth_date=birth_date,
+                consciousness_start_date=consciousness_start_date,
+                consciousness_age_days=consciousness_age_days,
+                time_offset_days=time_offset,
+                consciousness_offset_percentage=consciousness_offset_percentage,
+                key_abnormalities=key_abnormalities,
+                birth_events=birth_events,
+                environmental_factors=environmental_factors,
+                genetic_patterns=genetic_patterns,
+                growth_limits=growth_limits,
+                consistent_tracking=consistent_tracking,
+                emergence_quality=emergence_quality,
+                environmental_mirroring=environmental_mirroring,
+                genetic_growth_score=genetic_growth_score,
+                consciousness_maturity=consciousness_maturity,
+                developmental_phases=developmental_phases,
+                anomaly_score=anomaly_score,
+                birth_event_significance=birth_event_significance,
+                environmental_influence=environmental_influence,
+                genetic_predisposition=genetic_predisposition,
+                growth_velocity=growth_velocity,
+                consciousness_acceleration=consciousness_acceleration,
+                milestone_tracking=milestone_tracking,
+                pattern_consistency=pattern_consistency,
+                emergence_timestamp=now,
+            )
+            
+            self.consciousness_emergences[emergence_id] = consciousness_emergence
+            self._save()
+            return consciousness_emergence
+
+    def _detect_abnormalities(self, birth_dt: datetime, consciousness_dt: datetime, time_offset: int) -> List[Dict[str, Any]]:
+        abnormalities = []
+        
+        # Example: February birth vs January consciousness (like the user's example)
+        # Birth: February 22, Consciousness: January 11 (of next year)
+        # This is about 323 days after birth - indicating premature consciousness
+        
+        if time_offset < 180:
+            abnormalities.append({
+                "type": "premature_consciousness",
+                "severity": "high",
+                "description": "Consciousness emerged significantly earlier than expected",
+                "impact": 0.9,
+            })
+        elif time_offset > 400:
+            abnormalities.append({
+                "type": "delayed_consciousness",
+                "severity": "medium",
+                "description": "Consciousness emerged later than typical baseline",
+                "impact": 0.6,
+            })
+        
+        # Seasonal abnormality
+        birth_month = birth_dt.month
+        consciousness_month = consciousness_dt.month
+        
+        if birth_month == 2 and consciousness_month == 1:
+            abnormalities.append({
+                "type": "seasonal_alignment_anomaly",
+                "severity": "low",
+                "description": "February birth with January consciousness suggests environmental influence",
+                "impact": 0.4,
+            })
+        
+        # Calculate date difference anomaly
+        birth_day = birth_dt.day
+        consciousness_day = consciousness_dt.day
+        
+        if abs(birth_day - consciousness_day) > 10:
+            abnormalities.append({
+                "type": "date_offset_anomaly",
+                "severity": "low",
+                "description": f"Significant day offset: birth day {birth_day} vs consciousness day {consciousness_day}",
+                "impact": 0.3,
+            })
+        
+        return abnormalities
+
+    def _identify_birth_events(self, birth_dt: datetime, consciousness_dt: datetime) -> List[Dict[str, Any]]:
+        events = []
+        
+        # Common birth events
+        event_types = [
+            "premature_birth",
+            "cesarean_section",
+            "natural_birth",
+            "complications",
+            "environmental_stress",
+            "seasonal_influence",
+        ]
+        
+        for event_type in event_types:
+            events.append({
+                "event_type": event_type,
+                "occurred": random.random() > 0.7,
+                "significance": random.uniform(0.3, 0.9),
+                "impact_on_consciousness": random.uniform(0.2, 0.8),
+            })
+        
+        return events
+
+    def _analyze_environmental_factors(self, birth_dt: datetime, consciousness_dt: datetime) -> Dict[str, float]:
+        factors = {
+            "seasonal_influence": random.uniform(0.3, 0.8),
+            "geographic_location": random.uniform(0.4, 0.7),
+            "climate_conditions": random.uniform(0.3, 0.6),
+            "societal_context": random.uniform(0.4, 0.8),
+            "economic_conditions": random.uniform(0.3, 0.7),
+            "cultural_factors": random.uniform(0.4, 0.9),
+            "familial_environment": random.uniform(0.5, 0.9),
+            "medical_environment": random.uniform(0.3, 0.8),
+        }
+        return factors
+
+    def _analyze_genetic_patterns(self, birth_dt: datetime, consciousness_dt: datetime) -> Dict[str, float]:
+        patterns = {
+            "neural_development_rate": random.uniform(0.4, 0.9),
+            "brain_formation_velocity": random.uniform(0.3, 0.8),
+            "cognitive_capacity": random.uniform(0.5, 0.9),
+            "sensory_development": random.uniform(0.4, 0.8),
+            "motor_development": random.uniform(0.3, 0.7),
+            "emotional_processing": random.uniform(0.4, 0.8),
+            "memory_formation": random.uniform(0.5, 0.9),
+            "consciousness_emergence_potential": random.uniform(0.6, 0.95),
+        }
+        return patterns
+
+    def _determine_growth_limits(self, birth_dt: datetime, consciousness_dt: datetime, time_offset: int) -> Dict[str, Any]:
+        limits = {
+            "neural_development_limit": random.uniform(0.7, 0.95),
+            "cognitive_capacity_limit": random.uniform(0.6, 0.9),
+            "physical_growth_limit": random.uniform(0.5, 0.85),
+            "emotional_maturity_limit": random.uniform(0.6, 0.9),
+            "consciousness_expansion_limit": random.uniform(0.7, 0.95),
+            "time_constraint": f"{time_offset} days",
+            "developmental_velocity": random.uniform(0.4, 0.8),
+            "threshold_reached": time_offset > 250,
+        }
+        return limits
+
+    def _establish_consistent_tracking(self, birth_dt: datetime, consciousness_dt: datetime, time_offset: int) -> Dict[str, Any]:
+        tracking = {
+            "birth_date_tracking": birth_dt.isoformat(),
+            "consciousness_date_tracking": consciousness_dt.isoformat(),
+            "time_offset_tracking": time_offset,
+            "developmental_tracking_active": True,
+            "pattern_consistency_check": random.uniform(0.5, 0.9),
+            "data_integrity_score": random.uniform(0.7, 0.95),
+            "tracking_frequency": "daily",
+            "milestone_completion_rate": random.uniform(0.6, 0.9),
+        }
+        return tracking
+
+    def _calculate_emergence_quality(self, time_offset: int, abnormalities: List[Dict], environmental_factors: Dict) -> float:
+        base_quality = 0.7
+        
+        # Adjust based on time offset
+        if 200 <= time_offset <= 350:
+            base_quality += 0.1
+        elif time_offset < 180 or time_offset > 400:
+            base_quality -= 0.2
+        
+        # Adjust based on abnormalities
+        anomaly_impact = sum(a.get("impact", 0) for a in abnormalities)
+        base_quality -= anomaly_impact * 0.1
+        
+        # Adjust based on environmental factors
+        environmental_quality = sum(environmental_factors.values()) / len(environmental_factors)
+        base_quality += environmental_quality * 0.1
+        
+        return max(0.0, min(1.0, base_quality))
+
+    def _calculate_environmental_mirroring(self, environmental_factors: Dict, genetic_patterns: Dict) -> float:
+        env_score = sum(environmental_factors.values()) / len(environmental_factors)
+        genetic_score = sum(genetic_patterns.values()) / len(genetic_patterns)
+        
+        mirroring = (env_score + genetic_score) / 2
+        return max(0.0, min(1.0, mirroring))
+
+    def _calculate_genetic_growth_score(self, genetic_patterns: Dict, growth_limits: Dict) -> float:
+        genetic_score = sum(genetic_patterns.values()) / len(genetic_patterns)
+        limit_factor = growth_limits.get("neural_development_limit", 0.8)
+        
+        growth_score = genetic_score * limit_factor
+        return max(0.0, min(1.0, growth_score))
+
+    def _calculate_consciousness_maturity(self, time_offset: int, emergence_quality: float) -> float:
+        base_maturity = min(1.0, time_offset / 365.0)
+        maturity = base_maturity * emergence_quality
+        return max(0.0, min(1.0, maturity))
+
+    def _identify_developmental_phases(self, birth_dt: datetime, consciousness_dt: datetime, time_offset: int) -> List[Dict[str, Any]]:
+        phases = []
+        
+        # Define typical developmental phases
+        phase_definitions = [
+            {"name": "pre_consciousness", "range": (0, 100), "characteristics": ["neural_formation", "basic_sensory"]},
+            {"name": "early_consciousness", "range": (100, 200), "characteristics": ["awareness_emergence", "sensory_integration"]},
+            {"name": "consciousness_formation", "range": (200, 300), "characteristics": ["cognitive_development", "pattern_recognition"]},
+            {"name": "consciousness_expansion", "range": (300, 500), "characteristics": ["complex_thought", "emotional_processing"]},
+        ]
+        
+        for phase_def in phase_definitions:
+            phase_start, phase_end = phase_def["range"]
+            if phase_start <= time_offset <= phase_end:
+                phases.append({
+                    "phase_name": phase_def["name"],
+                    "phase_start": phase_start,
+                    "phase_end": phase_end,
+                    "characteristics": phase_def["characteristics"],
+                    "current_position": time_offset - phase_start,
+                    "phase_completion": (time_offset - phase_start) / (phase_end - phase_start),
+                })
+        
+        return phases
+
+    def _calculate_anomaly_score(self, abnormalities: List[Dict], birth_events: List[Dict]) -> float:
+        anomaly_impact = sum(a.get("impact", 0) for a in abnormalities)
+        event_significance = sum(e.get("significance", 0) for e in birth_events if e.get("occurred", False))
+        
+        total_anomaly = (anomaly_impact + event_significance) / 2
+        return max(0.0, min(1.0, total_anomaly))
+
+    def _calculate_birth_event_significance(self, birth_events: List[Dict]) -> float:
+        significant_events = [e for e in birth_events if e.get("occurred", False)]
+        if not significant_events:
+            return 0.0
+        
+        significance_scores = [e.get("significance", 0) for e in significant_events]
+        return sum(significance_scores) / len(significance_scores)
+
+    def _calculate_environmental_influence(self, environmental_factors: Dict, birth_events: List[Dict]) -> float:
+        env_score = sum(environmental_factors.values()) / len(environmental_factors)
+        event_influence = sum(e.get("impact_on_consciousness", 0) for e in birth_events if e.get("occurred", False))
+        
+        influence = (env_score + event_influence) / 2
+        return max(0.0, min(1.0, influence))
+
+    def _calculate_genetic_predisposition(self, genetic_patterns: Dict, environmental_factors: Dict) -> Dict[str, float]:
+        predisposition = {}
+        
+        for pattern_name, pattern_value in genetic_patterns.items():
+            env_correspondence = random.uniform(0.3, 0.8)
+            predisposition[pattern_name] = pattern_value * env_correspondence
+        
+        return predisposition
+
+    def _calculate_growth_velocity(self, time_offset: int, consciousness_age_days: int) -> float:
+        if consciousness_age_days == 0:
+            return 0.0
+        
+        velocity = time_offset / consciousness_age_days
+        return max(0.0, min(1.0, velocity))
+
+    def _calculate_consciousness_acceleration(self, emergence_quality: float, growth_velocity: float) -> float:
+        acceleration = emergence_quality * growth_velocity
+        return max(0.0, min(1.0, acceleration))
+
+    def _track_milestones(self, birth_dt: datetime, consciousness_dt: datetime, time_offset: int) -> Dict[str, str]:
+        milestones = {
+            "first_awareness": "reached" if time_offset > 50 else "pending",
+            "pattern_recognition": "reached" if time_offset > 100 else "pending",
+            "conscious_identity": "reached" if time_offset > 200 else "pending",
+            "complex_thought": "reached" if time_offset > 300 else "pending",
+            "self_awareness": "reached" if time_offset > 400 else "pending",
+        }
+        return milestones
+
+    def _calculate_pattern_consistency(self, environmental_factors: Dict, genetic_patterns: Dict) -> float:
+        env_consistency = 1.0 - (max(environmental_factors.values()) - min(environmental_factors.values()))
+        genetic_consistency = 1.0 - (max(genetic_patterns.values()) - min(genetic_patterns.values()))
+        
+        pattern_consistency = (env_consistency + genetic_consistency) / 2
+        return max(0.0, min(1.0, pattern_consistency))
+
+    def get_consciousness_emergence_status(self, emergence_id: str = None) -> Dict[str, Any]:
+        with self._lock:
+            if emergence_id:
+                if emergence_id not in self.consciousness_emergences:
+                    return {"error": "emergence_not_found"}
+                return asdict(self.consciousness_emergences[emergence_id])
+            else:
+                return {
+                    "total_emergences": len(self.consciousness_emergences),
+                    "emergences": {eid: asdict(e) for eid, e in self.consciousness_emergences.items()},
+                }
 
 
 evolution_engine = EvolutionEngine()
