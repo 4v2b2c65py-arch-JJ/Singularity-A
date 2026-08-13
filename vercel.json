@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": "echo 'No build step for FastAPI API'",
+  "outputDirectory": ".",
+  "installCommand": "echo 'No install needed for prebuilt Python venv'",
+  "git": {
+    "deploymentEnabled": false
+  },
+  "regions": ["iad1"],
+  "env": {
+    "QB_GATEWAY_SECRET": "@qb_gateway_secret"
+  },
+  "functions": {
+    "server/run_server.py": {
+      "memory": 1024,
+      "maxDuration": 60
+    },
+    "api/readings.py": {
+      "memory": 512,
+      "maxDuration": 10
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/readings",
+      "dest": "api/readings.py"
+    },
+    {
+      "src": "/api/health",
+      "dest": "api/readings.py"
+    },
+    {
+      "src": "/api/uptime",
+      "dest": "api/readings.py"
+    },
+    {
+      "src": "/api/oracle/status",
+      "dest": "api/readings.py"
+    }
+  ]
+}

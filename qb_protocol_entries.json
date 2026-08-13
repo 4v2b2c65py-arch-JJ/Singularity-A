@@ -1,0 +1,12 @@
+{
+  "credentials": {
+    "4fc04744649aa65ec143d2df": {
+      "entry_code": "4fc04744649aa65ec143d2df",
+      "signature": "00b8ff34860a86d7c1fbf074d226be7a",
+      "agent_id": "agent-001",
+      "issued_at": "2026-08-13T15:55:17.441264Z",
+      "expires_at": "2026-08-13T12:55:17.441327Z",
+      "metadata": {}
+    }
+  }
+}

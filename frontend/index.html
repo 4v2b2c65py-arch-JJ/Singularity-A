@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QB Protocol - Quick Usage</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Blur, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b0d12; color: #e5e7eb; margin: 0; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 28px; margin: 0 0 8px; }
+  .sub { color: #9ca3af; margin-bottom: 24px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .card { background: #0f1117; border: 1px solid #1f2937; border-radius: 14px; padding: 18px; }
+  .card h3 { margin: 0 0 10px; font-size: 16px; color: #38bdf8; }
+  .row { display: flex; gap: 8px; margin-top: 10px; }
+  input, button, select, textarea { font: inherit; color: inherit; }
+  input, select, textarea { background: #0b0d12; border: 1px solid #2a2f3a; border-radius: 10px; padding: 10px 12px; width: 100%; }
+  button { background: #2563eb; border: 0; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
+  button.secondary { background: #1f2937; }
+  .out { background: #000; border: 1px solid #2a2f3a; border-radius: 10px; padding: 12px; min-height: 120px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; color: #bef264; }
+  .badge { display: inline-block; background: rgba(56,189,248,0.12); color: #38bdf8; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>QB Protocol</h1>
+    <div class="sub">Quick usage frontend for hosted API · Vercel-ready · Secure by default</div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Connection</h3>
+        <input id="baseUrl" value="http://localhost:17761" />
+        <div class="row">
+          <button onclick="setBase()">Set</button>
+          <button class="secondary" onclick="health()">Health</button>
+          <button class="secondary" onclick="status()">Status</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Entry / Agent</h3>
+        <input id="agentId" placeholder="agent-id" value="agent-001" />
+        <div class="row">
+          <button onclick="issueEntry()">Issue Entry</button>
+          <button class="secondary" onclick="validateEntry()">Validate</button>
+        </div>
+        <input id="entryCode" placeholder="entry_code" style="margin-top:8px" />
+        <input id="signature" placeholder="signature" style="margin-top:8px" />
+      </div>
+
+      <div class="card">
+        <h3>Instances</h3>
+        <input id="instanceName" placeholder="instance name" value="demo-instance" />
+        <div class="row">
+          <button onclick="createInstance()">Create</button>
+          <button class="secondary" onclick="startInstance()">Start</button>
+          <button class="secondary" onclick="stopInstance()">Stop</button>
+        </div>
+        <input id="instanceId" placeholder="instance_id" style="margin-top:8px" />
+      </div>
+
+      <div class="card">
+        <h3>IP Quick Connect</h3>
+        <select id="ipProvider">
+          <option value="ip-api">ip-api (no login)</option>
+          <option value="ipify">ipify (no login)</option>
+          <option value="freegeoip">freegeoip (no login)</option>
+          <option value="ipdata">ipdata</option>
+        </select>
+        <div class="row">
+          <button onclick="quickIP()">Quick IP</button>
+          <button class="secondary" onclick="lookupIP()">Lookup IP</button>
+        </div>
+        <input id="lookupIp" placeholder="optional ip" style="margin-top:8px" />
+      </div>
+
+      <div class="card">
+        <h3>Dream Engine</h3>
+        <input id="dreamDepth" type="number" placeholder="depth" value="0.5" />
+        <textarea id="dreamProjection" placeholder='{"type":"projection"}'>{ "type": "demo" }</textarea>
+        <div class="row">
+          <button onclick="createDreamLayer()">Create Layer</button>
+          <button class="secondary" onclick="dreamStatus()">Status</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Healing</h3>
+        <div class="row">
+          <button onclick="triggerRegen()">Regen</button>
+          <button class="secondary" onclick="healingStatus()">Status</button>
+        </div>
+        <div style="margin-top:10px" class="badge">Self-feeding healing loop</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Response</h3>
+      <div id="out" class="out">Ready.</div>
+    </div>
+
+    <div class="row-actions">
+      <span class="badge">Vercel-ready</span>
+      <span class="badge">Sensitive env vars only</span>
+      <span class="badge">No NEXT_PUBLIC_ secrets</span>
+      <span class="badge">Launchd persistent service</span>
+      <span class="badge">Entry signature enforced</span>
+    </div>
+  </div>
+
+<script>
+  const out = document.getElementById('out');
+  function base() { return document.getElementById('baseUrl').value.replace(/\\/$/, '') || 'http://localhost:17761'; }
+  function show(x) { out.textContent = typeof x === 'string' ? x : JSON.stringify(x, null, 2); }
+  async function req(path, opts={}) {
+    const res = await fetch(base() + path, { headers: {'Content-Type':'application/json'}, ...opts });
+    const data = await res.json().catch(()=>({raw: await res.text()}));
+    show({status: res.status, data});
+  }
+  function setBase(){ show({base: base()}); }
+  function health(){ req('/health'); }
+  function status(){ req('/status'); }
+  function issueEntry(){
+    const agentId = document.getElementById('agentId').value || 'agent-001';
+    req('/entry/issue', {method:'POST', body: JSON.stringify({agent_id: agentId, ttl_seconds: 3600})});
+  }
+  function validateEntry(){
+    const entry_code = document.getElementById('entryCode').value;
+    const signature = document.getElementById('signature').value;
+    const agent_id = document.getElementById('agentId').value;
+    req('/entry/validate', {method:'POST', body: JSON.stringify({entry_code, signature, agent_id})});
+  }
+  function createInstance(){
+    const entry_code = document.getElementById('entryCode').value;
+    const signature = document.getElementById('signature').value;
+    const agent_id = document.getElementById('agentId').value;
+    const name = document.getElementById('instanceName').value || 'demo-instance';
+    const body = {name, platform: navigator.platform};
+    if(entry_code && signature) body.entry = {entry_code, signature, agent_id};
+    req('/instances', {method:'POST', body: JSON.stringify(body)});
+  }
+  function startInstance(){
+    const instanceId = document.getElementById('instanceId').value;
+    if(!instanceId){ show('instance_id required'); return; }
+    req('/instances/' + encodeURIComponent(instanceId) + '/start', {method:'POST'});
+  }
+  function stopInstance(){
+    const instanceId = document.getElementById('instanceId').value;
+    if(!instanceId){ show('instance_id required'); return; }
+    req('/instances/' + encodeURIComponent(instanceId) + '/stop', {method:'POST'});
+  }
+  function quickIP(){ req('/ip/quick-connect'); }
+  function lookupIP(){
+    const ip = document.getElementById('lookupIp').value;
+    const provider = document.getElementById('ipProvider').value;
+    req('/ip/lookup', {method:'POST', body: JSON.stringify({ip: ip || null, provider})});
+  }
+  function createDreamLayer(){
+    const depth = parseFloat(document.getElementById('dreamDepth').value || '0.5');
+    let projection = {};
+    try { projection = JSON.parse(document.getElementById('dreamProjection').value || '{}'); } catch(e){}
+    const entry_code = document.getElementById('entryCode').value;
+    const signature = document.getElementById('signature').value;
+    const agent_id = document.getElementById('agentId').value;
+    const body = {depth, projection, convergence: 0.8, brain_state_emission: 0.0, singularity_threshold: 0.0};
+    if(entry_code && signature) body.entry = {entry_code, signature, agent_id};
+    req('/dream/layers', {method:'POST', body: JSON.stringify(body)});
+  }
+  function dreamStatus(){ req('/dream/status'); }
+  function triggerRegen(){ req('/healing/regen', {method:'POST'}); }
+  function healingStatus(){ req('/healing/status'); }
+</script>
+</body>
+</html>
