@@ -18,7 +18,7 @@ import hashlib
 import hmac
 import base64
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Callable
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from enum import Enum
@@ -82,6 +82,15 @@ class SiriIntegration:
         self._lock = threading.RLock()
         self._load_state()
         self._start_time = time.time()
+        try:
+            from qb_protocol.siri_integration.responses import siri_response_store
+        except ImportError:
+            try:
+                from siri_integration.responses import siri_response_store
+            except ImportError:
+                siri_response_store = None
+        if siri_response_store:
+            siri_response_store.sync_from_cloud()
 
     def _load_state(self):
         if self.state_path.exists():
@@ -292,7 +301,25 @@ class SiriIntegration:
         return {}
 
     def _generate_response(self, utterance: str, intent: SiriIntent, entities: Dict[str, Any], confidence: float, context: Dict[str, Any]) -> tuple[str, str, Optional[Dict[str, Any]], Optional[str], bool]:
-        """Generate structured response for Siri using GPT-based reasoning when available."""
+        """Generate structured response for Siri using cloud-backed store first, GPT second, hardcoded last."""
+        try:
+            from qb_protocol.siri_integration.responses import siri_response_store
+        except ImportError:
+            try:
+                from siri_integration.responses import siri_response_store
+            except ImportError:
+                siri_response_store = None
+        
+        if siri_response_store:
+            store_response = siri_response_store.get_response(intent.value, utterance)
+            if store_response:
+                text = store_response.get("text") or f"Processed: {utterance}"
+                spoken = store_response.get("spoken") or text
+                action = store_response.get("action")
+                display = store_response.get("display")
+                continue_session = bool(store_response.get("continue_session", False))
+                return text, spoken, action, display, continue_session
+        
         model_response = self._get_model_response(utterance, intent, context)
         
         if model_response:

@@ -7,6 +7,7 @@ Voice commands, Shortcuts, session tokens, autonomous actions.
 from .siri import SiriIntegration, siri_integration
 from .shortcuts import ShortcutManager, shortcut_manager
 from .session import SiriSessionManager, siri_session_manager
+from .responses import SiriResponseStore, siri_response_store
 from .api.routes import router as siri_router
 
 __all__ = [
@@ -16,5 +17,7 @@ __all__ = [
     "shortcut_manager",
     "SiriSessionManager",
     "siri_session_manager",
+    "SiriResponseStore",
+    "siri_response_store",
     "siri_router",
 ]
