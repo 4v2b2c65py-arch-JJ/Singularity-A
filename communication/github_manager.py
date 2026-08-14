@@ -220,7 +220,7 @@ class GitHubManager:
             return self._record_operation("switch_branch", OperationStatus.SUCCESS, f"Switched to {branch_name}", {"branch": branch_name})
         return self._record_operation("switch_branch", OperationStatus.FAILED, f"Failed to switch to {branch_name}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def _get_git_status(self) -> Dict[str, Any]:
         branch = self._git(["branch", "--show-current"]) or "unknown"
         commit_hash = self._git(["rev-parse", "HEAD"]) or "unknown"
         status = self._git(["status", "--porcelain"]) or ""
@@ -311,7 +311,7 @@ class GitHubManager:
             return {"status": OperationStatus.SUCCESS.value, "message": f"Shared session {session_id} with {participant_id}", "participants": session.participants}
 
     def get_status(self) -> Dict[str, Any]:
-        git_status = self.get_status()
+        git_status = self._get_git_status()
         return {
             "git": git_status,
             "operations": len(self.operations),

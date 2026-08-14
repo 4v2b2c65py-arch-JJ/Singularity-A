@@ -25,7 +25,7 @@ try:
 except ImportError:
     pass
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Body
 from fastapi.responses import JSONResponse, HTMLResponse
 from pathlib import Path
 from pydantic import BaseModel
@@ -1822,7 +1822,7 @@ def communication_status():
 
 
 @app.post("/communication/auto-commit")
-def communication_auto_commit(body: Dict[str, Any] = {}):
+def communication_auto_commit(body: Dict[str, Any] = Body(default={})):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     message_template = body.get("message_template", "QB Protocol: auto-sync {timestamp}")
@@ -1837,7 +1837,7 @@ def get_timeline(conversation_id: str, limit: int = 100):
 
 
 @app.post("/communication/timeline/{conversation_id}/mode")
-def set_timeline_mode(conversation_id: str, body: Dict[str, Any]):
+def set_timeline_mode(conversation_id: str, body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     mode = body.get("mode", "present")
@@ -1866,30 +1866,30 @@ def disable_addon(addon_id: str):
 
 
 @app.post("/communication/sessions")
-def create_shared_session(body: Dict[str, Any]):
+def create_shared_session(body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     host = body.get("host", "system")
     participants = body.get("participants", [])
-    from communication.session_sharing import session_sharing
+    from qb_protocol.communication.session_sharing import session_sharing
     session = session_sharing.create_session(host, participants, body.get("metadata"))
     return asdict(session)
 
 
 @app.post("/communication/sessions/{session_id}/join")
-def join_session(session_id: str, body: Dict[str, Any]):
+def join_session(session_id: str, body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     participant_id = body.get("participant_id", "unknown")
-    from communication.session_sharing import session_sharing
+    from qb_protocol.communication.session_sharing import session_sharing
     return session_sharing.join_session(session_id, participant_id)
 
 
 @app.post("/communication/sessions/{session_id}/transfer")
-def transfer_data(session_id: str, body: Dict[str, Any]):
+def transfer_data(session_id: str, body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    from communication.session_sharing import session_sharing
+    from qb_protocol.communication.session_sharing import session_sharing
     import base64
     data = base64.b64decode(body.get("data", ""))
     result = session_sharing.transfer_data(
@@ -1903,10 +1903,10 @@ def transfer_data(session_id: str, body: Dict[str, Any]):
 
 
 @app.post("/communication/sessions/{session_id}/clear")
-def clear_session_data(session_id: str, body: Dict[str, Any]):
+def clear_session_data(session_id: str, body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    from communication.session_sharing import session_sharing
+    from qb_protocol.communication.session_sharing import session_sharing
     participant_id = body.get("participant_id", "system")
     return asdict(session_sharing.clear_server_data(session_id, participant_id))
 

@@ -104,7 +104,9 @@ class CommunicationTimeline:
                 entries = [e for e in entries if e.mode == mode.value]
             return [asdict(e) for e in entries[-limit:]]
 
-    def set_active_mode(self, conversation_id: str, mode: TimelineMode) -> Dict[str, Any]:
+    def set_active_mode(self, conversation_id: str, mode: "TimelineMode | str") -> Dict[str, Any]:
+        if isinstance(mode, str):
+            mode = TimelineMode(mode)
         with self._lock:
             self.active_mode[conversation_id] = mode.value
         self._save()

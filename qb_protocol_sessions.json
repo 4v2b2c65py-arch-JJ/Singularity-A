@@ -1,0 +1,62 @@
+{
+  "sessions": {
+    "3c024c96-45d5-4189-9802-2ada4ebc6c1a": {
+      "session_id": "3c024c96-45d5-4189-9802-2ada4ebc6c1a",
+      "host": "test",
+      "participants": [
+        "user1"
+      ],
+      "status": "active",
+      "created_at": "2026-08-14T03:28:51.855212Z",
+      "updated_at": "2026-08-14T03:28:51.855689Z",
+      "memory_allocated": 0,
+      "memory_used": 0,
+      "data_transfers": [],
+      "metadata": {}
+    },
+    "65b085af-dddb-4b5c-9a24-a459409cdf33": {
+      "session_id": "65b085af-dddb-4b5c-9a24-a459409cdf33",
+      "host": "test",
+      "participants": [
+        "user1"
+      ],
+      "status": "active",
+      "created_at": "2026-08-14T03:31:33.401600Z",
+      "updated_at": "2026-08-14T03:31:33.401624Z",
+      "memory_allocated": 0,
+      "memory_used": 0,
+      "data_transfers": [],
+      "metadata": {}
+    },
+    "620d7b60-fec2-4e31-b26d-59427fd4d549": {
+      "session_id": "620d7b60-fec2-4e31-b26d-59427fd4d549",
+      "host": "test",
+      "participants": [
+        "user1"
+      ],
+      "status": "active",
+      "created_at": "2026-08-14T03:33:56.548040Z",
+      "updated_at": "2026-08-14T03:33:56.548056Z",
+      "memory_allocated": 0,
+      "memory_used": 0,
+      "data_transfers": [],
+      "metadata": {}
+    },
+    "66391ead-14cd-4bb6-8a71-04135ceadee9": {
+      "session_id": "66391ead-14cd-4bb6-8a71-04135ceadee9",
+      "host": "test",
+      "participants": [
+        "user1"
+      ],
+      "status": "active",
+      "created_at": "2026-08-14T03:35:15.434717Z",
+      "updated_at": "2026-08-14T03:35:15.434729Z",
+      "memory_allocated": 0,
+      "memory_used": 0,
+      "data_transfers": [],
+      "metadata": {}
+    }
+  },
+  "transfers": {},
+  "clearances": {}
+}
