@@ -87,9 +87,7 @@ class LaunchdServiceManager:
             if self.plist_path.exists():
                 self.uninstall()
 
-        script = Path(__file__).resolve().parent.parent.parent.parent / "agent.py"
-        if not script.exists():
-            script = Path(__file__).resolve().parent.parent.parent / "agent.py"
+        script = Path(__file__).resolve().parent.parent / "agent.py"
 
         python = Path(sys.executable).resolve()
         working_dir = script.parent
