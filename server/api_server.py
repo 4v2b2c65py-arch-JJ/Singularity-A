@@ -2361,6 +2361,18 @@ except ImportError:
     except ImportError:
         HAS_SLEEP_AGENT = False
 
+try:
+    from qb_protocol.mesh_rewards.api.routes import router as mesh_rewards_router
+    app.include_router(mesh_rewards_router)
+    HAS_MESH_REWARDS = True
+except ImportError:
+    try:
+        from mesh_rewards.api.routes import router as mesh_rewards_router
+        app.include_router(mesh_rewards_router)
+        HAS_MESH_REWARDS = True
+    except ImportError:
+        HAS_MESH_REWARDS = False
+
 
 if __name__ == "__main__":
     import uvicorn
