@@ -2325,6 +2325,42 @@ except ImportError:
     except ImportError:
         HAS_ICON_GENERATOR = False
 
+try:
+    from qb_protocol.siri_integration.api.routes import router as siri_router
+    app.include_router(siri_router)
+    HAS_SIRI = True
+except ImportError:
+    try:
+        from siri_integration.api.routes import router as siri_router
+        app.include_router(siri_router)
+        HAS_SIRI = True
+    except ImportError:
+        HAS_SIRI = False
+
+try:
+    from qb_protocol.adaptive_learning.api.routes import router as adaptive_learning_router
+    app.include_router(adaptive_learning_router)
+    HAS_ADAPTIVE_LEARNING = True
+except ImportError:
+    try:
+        from adaptive_learning.api.routes import router as adaptive_learning_router
+        app.include_router(adaptive_learning_router)
+        HAS_ADAPTIVE_LEARNING = True
+    except ImportError:
+        HAS_ADAPTIVE_LEARNING = False
+
+try:
+    from qb_protocol.sleep_agent.api.routes import router as sleep_agent_router
+    app.include_router(sleep_agent_router)
+    HAS_SLEEP_AGENT = True
+except ImportError:
+    try:
+        from sleep_agent.api.routes import router as sleep_agent_router
+        app.include_router(sleep_agent_router)
+        HAS_SLEEP_AGENT = True
+    except ImportError:
+        HAS_SLEEP_AGENT = False
+
 
 if __name__ == "__main__":
     import uvicorn
