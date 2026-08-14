@@ -384,6 +384,41 @@ class VehicleEmergencyAwarenessRequest(BaseModel):
     vehicle_id: str
 
 
+class VoiceProfileRequest(BaseModel):
+    user_id: str
+    audio_data: str
+    model_id: str = "speechbrain_ecapa"
+
+
+class VoiceSharingRequest(BaseModel):
+    profile_id: str
+    user_consent: bool
+
+
+class VoiceTwinRequest(BaseModel):
+    user_id: str
+    profile_id: str
+    response_permissions: Dict[str, bool]
+
+
+class AutomaticResponseRequest(BaseModel):
+    twin_id: str
+    user_permission: bool
+
+
+class VoiceResponseRequest(BaseModel):
+    user_id: str
+    session_id: str
+    location_data: Dict[str, Any]
+    response_type: str
+    user_permission: bool
+
+
+class VoiceComplianceRequest(BaseModel):
+    user_id: str
+    compliance_type: str
+
+
 class PrincipalityRequest(BaseModel):
     user_id: str
     principality: str = "default"
@@ -1619,6 +1654,61 @@ def evolution_emergency_status(user_id: str, vehicle_id: str):
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.get_emergency_status(user_id, vehicle_id)
+
+
+@app.post("/evolution/voice-profile")
+def evolution_voice_profile(body: VoiceProfileRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_voice_profile(body.user_id, body.audio_data, body.model_id)
+    return asdict(result)
+
+
+@app.post("/evolution/voice-sharing")
+def evolution_voice_sharing(body: VoiceSharingRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.enable_voice_sharing(body.profile_id, body.user_consent)
+    return asdict(result)
+
+
+@app.post("/evolution/voice-twin")
+def evolution_voice_twin(body: VoiceTwinRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_voice_twin(body.user_id, body.profile_id, body.response_permissions)
+    return asdict(result)
+
+
+@app.post("/evolution/automatic-responses")
+def evolution_automatic_responses(body: AutomaticResponseRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.enable_automatic_responses(body.twin_id, body.user_permission)
+    return asdict(result)
+
+
+@app.post("/evolution/voice-response")
+def evolution_voice_response(body: VoiceResponseRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.generate_voice_response(body.user_id, body.session_id, body.location_data, body.response_type, body.user_permission)
+    return asdict(result)
+
+
+@app.post("/evolution/voice-compliance")
+def evolution_voice_compliance(body: VoiceComplianceRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_voice_compliance(body.user_id, body.compliance_type)
+    return asdict(result)
+
+
+@app.get("/evolution/voice-status/{user_id}")
+def evolution_voice_status(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_voice_status(user_id)
 
 
 if __name__ == "__main__":

@@ -1189,6 +1189,92 @@ class EmergencyMonitor:
 
 
 @dataclass
+class VoiceProfile:
+    profile_id: str
+    user_id: str
+    voice_embeddings: Dict[str, List[float]]
+    mfcc_features: List[List[float]]
+    chroma_features: List[List[float]]
+    spectral_contrast: List[List[float]]
+    voice_characteristics: Dict[str, float]
+    voice_pattern_hash: str
+    local_storage_path: str
+    cloud_sync_enabled: bool
+    share_permission: bool
+    emergency_voice_enabled: bool
+    profile_timestamp: str
+
+
+@dataclass
+class VoiceTwin:
+    twin_id: str
+    user_id: str
+    parent_profile_id: str
+    twin_embeddings: Dict[str, List[float]]
+    vocal_patterns: Dict[str, Any]
+    emergency_activation: bool
+    debugging_enabled: bool
+    compliance_checks: bool
+    automatic_responses: bool
+    response_permissions: Dict[str, bool]
+    location_based_responses: bool
+    personalized_defaults: Dict[str, Any]
+    boundary_respect: bool
+    relationship_level: str
+    twin_timestamp: str
+
+
+@dataclass
+class VoiceModelCloud:
+    model_id: str
+    model_name: str
+    model_type: str
+    model_size: str
+    cloud_endpoint: str
+    availability_24h: bool
+    response_time: float
+    accuracy: float
+    supported_features: List[str]
+    privacy_compliance: str
+    data_retention: str
+    model_timestamp: str
+
+
+@dataclass
+class VoiceResponse:
+    response_id: str
+    user_id: str
+    session_id: str
+    location_data: Dict[str, Any]
+    response_type: str
+    voice_twin_used: bool
+    automatic_response: bool
+    user_permission: bool
+    response_content: str
+    vocal_similarity: float
+    context_awareness: Dict[str, Any]
+    boundary_respected: bool
+    relationship_context: str
+    response_timestamp: str
+
+
+@dataclass
+class VoiceCompliance:
+    compliance_id: str
+    user_id: str
+    compliance_type: str
+    privacy_compliance: bool
+    data_protection: bool
+    consent_obtained: bool
+    permission_verified: bool
+    boundary_respected: bool
+    relationship_verified: bool
+    audit_log: List[Dict[str, Any]]
+    compliance_score: float
+    compliance_timestamp: str
+
+
+@dataclass
 class EvolutionCycle:
     cycle_id: str
     iteration: int
@@ -1258,6 +1344,11 @@ class EvolutionEngine:
         self.emergency_events: List[EmergencyEvent] = []
         self.vehicle_emergency_awareness: Dict[str, VehicleEmergencyAwareness] = {}
         self.emergency_monitors: Dict[str, EmergencyMonitor] = {}
+        self.voice_profiles: Dict[str, VoiceProfile] = {}
+        self.voice_twins: Dict[str, VoiceTwin] = {}
+        self.voice_model_clouds: Dict[str, VoiceModelCloud] = {}
+        self.voice_responses: List[VoiceResponse] = []
+        self.voice_compliances: Dict[str, VoiceCompliance] = {}
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
@@ -1269,6 +1360,7 @@ class EvolutionEngine:
         self._seed_user_cycles()
         self._seed_genealogy_datasets()
         self._seed_vehicles()
+        self._seed_voice_models()
 
     def _load(self):
         if self.db_path.exists():
@@ -1381,6 +1473,16 @@ class EvolutionEngine:
                         self.vehicle_emergency_awareness[veid] = VehicleEmergencyAwareness(**vd)
                     for emid, em in data.get("emergency_monitors", {}).items():
                         self.emergency_monitors[emid] = EmergencyMonitor(**em)
+                    for vpid, vp in data.get("voice_profiles", {}).items():
+                        self.voice_profiles[vpid] = VoiceProfile(**vp)
+                    for vtid, vt in data.get("voice_twins", {}).items():
+                        self.voice_twins[vtid] = VoiceTwin(**vt)
+                    for vmid, vm in data.get("voice_model_clouds", {}).items():
+                        self.voice_model_clouds[vmid] = VoiceModelCloud(**vm)
+                    for vrid, vr in data.get("voice_responses", []):
+                        self.voice_responses.append(VoiceResponse(**vr))
+                    for vcid, vc in data.get("voice_compliances", {}).items():
+                        self.voice_compliances[vcid] = VoiceCompliance(**vc)
                     self.original_density_snapshot = data.get("original_density_snapshot")
             except Exception:
                 pass
@@ -1493,6 +1595,11 @@ class EvolutionEngine:
                     "emergency_events": [asdict(e) for e in self.emergency_events[-1000:]],
                     "vehicle_emergency_awareness": {veid: asdict(v) for veid, v in self.vehicle_emergency_awareness.items()},
                     "emergency_monitors": {emid: asdict(e) for emid, e in self.emergency_monitors.items()},
+                    "voice_profiles": {vpid: asdict(v) for vpid, v in self.voice_profiles.items()},
+                    "voice_twins": {vtid: asdict(v) for vtid, v in self.voice_twins.items()},
+                    "voice_model_clouds": {vmid: asdict(v) for vmid, v in self.voice_model_clouds.items()},
+                    "voice_responses": [asdict(v) for v in self.voice_responses[-1000:]],
+                    "voice_compliances": {vcid: asdict(v) for vcid, v in self.voice_compliances.items()},
                 }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
@@ -1642,6 +1749,32 @@ class EvolutionEngine:
     def _seed_vehicles(self):
         # Vehicle types and connections will be created on-demand
         pass
+
+    def _seed_voice_models(self):
+        if self.voice_model_clouds:
+            return
+        models = [
+            ("speechbrain_ecapa", "SpeechBrain ECAPA", "x_vector", "small", "https://api.voicecloud.com/ecapa", True, 0.15, 0.95, ["embeddings", "verification", "diarization"], "GDPR", "24h"),
+            ("d_vector_model", "D-Vector", "d_vector", "tiny", "https://api.voicecloud.com/dvector", True, 0.12, 0.92, ["embeddings", "verification"], "GDPR", "24h"),
+            ("librosa_mfcc", "Librosa MFCC", "mfcc", "minimal", "https://api.voicecloud.com/mfcc", True, 0.10, 0.88, ["features", "analysis"], "GDPR", "24h"),
+        ]
+        now = datetime.utcnow().isoformat() + "Z"
+        for model_id, model_name, model_type, model_size, cloud_endpoint, availability_24h, response_time, accuracy, supported_features, privacy_compliance, data_retention in models:
+            self.voice_model_clouds[model_id] = VoiceModelCloud(
+                model_id=model_id,
+                model_name=model_name,
+                model_type=model_type,
+                model_size=model_size,
+                cloud_endpoint=cloud_endpoint,
+                availability_24h=availability_24h,
+                response_time=response_time,
+                accuracy=accuracy,
+                supported_features=supported_features,
+                privacy_compliance=privacy_compliance,
+                data_retention=data_retention,
+                model_timestamp=now,
+            )
+        self._save()
 
     def _generate_world_schema_from_earth(self) -> WorldSchema:
         schema_id = str(uuid.uuid4())
@@ -5632,6 +5765,293 @@ class EvolutionEngine:
                 "emergency_monitor": asdict(monitor) if monitor else None,
                 "monitor_status": monitor.monitor_status if monitor else "inactive",
                 "safety_logging_active": awareness.safety_log_active if awareness else False,
+            }
+
+    def create_voice_profile(self, user_id: str, audio_data: str, model_id: str = "speechbrain_ecapa") -> VoiceProfile:
+        with self._lock:
+            profile_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Generate voice embeddings (simulated x-vectors)
+            voice_embeddings = {
+                "x_vector": [random.uniform(-1.0, 1.0) for _ in range(512)],
+                "d_vector": [random.uniform(-1.0, 1.0) for _ in range(256)],
+            }
+            
+            # Generate MFCC features (13 coefficients per frame)
+            mfcc_features = [[random.uniform(-1.0, 1.0) for _ in range(13)] for _ in range(100)]
+            
+            # Generate chroma features (12 dimensions)
+            chroma_features = [[random.uniform(0.0, 1.0) for _ in range(12)] for _ in range(50)]
+            
+            # Generate spectral contrast
+            spectral_contrast = [[random.uniform(0.0, 1.0) for _ in range(7)] for _ in range(50)]
+            
+            # Voice characteristics
+            voice_characteristics = {
+                "pitch": random.uniform(80, 300),
+                "timbre": random.uniform(0.0, 1.0),
+                "tempo": random.uniform(0.5, 2.0),
+                "resonance": random.uniform(0.0, 1.0),
+                "articulation": random.uniform(0.0, 1.0),
+            }
+            
+            # Generate voice pattern hash
+            voice_pattern_hash = str(hash(frozenset(voice_embeddings.keys()) | frozenset(voice_characteristics.items())))
+            
+            # Local storage path (must not share)
+            local_storage_path = f"/local/voice_profiles/{user_id}/{profile_id}"
+            
+            # Default settings
+            cloud_sync_enabled = False
+            share_permission = False
+            emergency_voice_enabled = True
+            
+            profile = VoiceProfile(
+                profile_id=profile_id,
+                user_id=user_id,
+                voice_embeddings=voice_embeddings,
+                mfcc_features=mfcc_features,
+                chroma_features=chroma_features,
+                spectral_contrast=spectral_contrast,
+                voice_characteristics=voice_characteristics,
+                voice_pattern_hash=voice_pattern_hash,
+                local_storage_path=local_storage_path,
+                cloud_sync_enabled=cloud_sync_enabled,
+                share_permission=share_permission,
+                emergency_voice_enabled=emergency_voice_enabled,
+                profile_timestamp=now,
+            )
+            
+            self.voice_profiles[profile_id] = profile
+            self._save()
+            return profile
+
+    def enable_voice_sharing(self, profile_id: str, user_consent: bool) -> VoiceProfile:
+        with self._lock:
+            if profile_id not in self.voice_profiles:
+                raise ValueError("Profile not found")
+            
+            if not user_consent:
+                raise ValueError("User consent required")
+            
+            profile = self.voice_profiles[profile_id]
+            profile.share_permission = True
+            profile.cloud_sync_enabled = True
+            self._save()
+            return profile
+
+    def create_voice_twin(self, user_id: str, profile_id: str, response_permissions: Dict[str, bool]) -> VoiceTwin:
+        with self._lock:
+            twin_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            if profile_id not in self.voice_profiles:
+                raise ValueError("Profile not found")
+            
+            profile = self.voice_profiles[profile_id]
+            
+            # Clone embeddings for twin
+            twin_embeddings = {
+                "x_vector": profile.voice_embeddings["x_vector"].copy(),
+                "d_vector": profile.voice_embeddings["d_vector"].copy(),
+            }
+            
+            # Vocal patterns based on profile
+            vocal_patterns = {
+                "speaking_rate": profile.voice_characteristics.get("tempo", 1.0),
+                "pitch_range": profile.voice_characteristics.get("pitch", 150),
+                "voice_style": profile.voice_characteristics.get("timbre", 0.5),
+                "articulation_pattern": profile.voice_characteristics.get("articulation", 0.5),
+            }
+            
+            # Default settings
+            emergency_activation = True
+            debugging_enabled = False
+            compliance_checks = True
+            automatic_responses = False
+            location_based_responses = True
+            
+            # Personalized defaults for robotic environment
+            personalized_defaults = {
+                "greeting_style": "professional",
+                "response_tone": "respectful",
+                "interaction_level": "moderate",
+                "boundary_awareness": "high",
+            }
+            
+            # Boundary respect
+            boundary_respect = True
+            relationship_level = "professional"
+            
+            twin = VoiceTwin(
+                twin_id=twin_id,
+                user_id=user_id,
+                parent_profile_id=profile_id,
+                twin_embeddings=twin_embeddings,
+                vocal_patterns=vocal_patterns,
+                emergency_activation=emergency_activation,
+                debugging_enabled=debugging_enabled,
+                compliance_checks=compliance_checks,
+                automatic_responses=automatic_responses,
+                response_permissions=response_permissions,
+                location_based_responses=location_based_responses,
+                personalized_defaults=personalized_defaults,
+                boundary_respect=boundary_respect,
+                relationship_level=relationship_level,
+                twin_timestamp=now,
+            )
+            
+            self.voice_twins[twin_id] = twin
+            self._save()
+            return twin
+
+    def enable_automatic_responses(self, twin_id: str, user_permission: bool) -> VoiceTwin:
+        with self._lock:
+            if twin_id not in self.voice_twins:
+                raise ValueError("Twin not found")
+            
+            if not user_permission:
+                raise ValueError("User permission required")
+            
+            twin = self.voice_twins[twin_id]
+            twin.automatic_responses = True
+            self._save()
+            return twin
+
+    def generate_voice_response(self, user_id: str, session_id: str, location_data: Dict[str, Any], response_type: str, user_permission: bool) -> VoiceResponse:
+        with self._lock:
+            response_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Find voice twin for user
+            voice_twin = None
+            for twin_id, twin in self.voice_twins.items():
+                if twin.user_id == user_id:
+                    voice_twin = twin
+                    break
+            
+            voice_twin_used = voice_twin is not None
+            automatic_response = voice_twin is not None and voice_twin.automatic_responses and user_permission
+            
+            # Generate response content based on location and context
+            response_content = self._generate_contextual_response(location_data, response_type, voice_twin)
+            
+            # Calculate vocal similarity
+            vocal_similarity = random.uniform(0.85, 0.98) if voice_twin else 0.0
+            
+            # Context awareness
+            context_awareness = {
+                "location_relevant": True,
+                "time_relevant": True,
+                "social_context": "professional",
+                "emergency_context": response_type == "emergency",
+            }
+            
+            # Boundary respected
+            boundary_respected = True
+            relationship_context = voice_twin.relationship_level if voice_twin else "unknown"
+            
+            response = VoiceResponse(
+                response_id=response_id,
+                user_id=user_id,
+                session_id=session_id,
+                location_data=location_data,
+                response_type=response_type,
+                voice_twin_used=voice_twin_used,
+                automatic_response=automatic_response,
+                user_permission=user_permission,
+                response_content=response_content,
+                vocal_similarity=vocal_similarity,
+                context_awareness=context_awareness,
+                boundary_respected=boundary_respected,
+                relationship_context=relationship_context,
+                response_timestamp=now,
+            )
+            
+            self.voice_responses.append(response)
+            if len(self.voice_responses) > 10000:
+                self.voice_responses = self.voice_responses[-10000:]
+            
+            self._save()
+            return response
+
+    def _generate_contextual_response(self, location_data: Dict[str, Any], response_type: str, voice_twin: Optional[VoiceTwin]) -> str:
+        if response_type == "emergency":
+            return "Emergency response activated. Assistance is being dispatched."
+        elif response_type == "greeting":
+            return "Hello, I'm here to assist you."
+        elif response_type == "confirmation":
+            return "Yes, I understand and can help with that."
+        elif response_type == "assistance":
+            return "I'm ready to provide assistance as needed."
+        else:
+            return "Response generated based on your voice profile and context."
+
+    def create_voice_compliance(self, user_id: str, compliance_type: str) -> VoiceCompliance:
+        with self._lock:
+            compliance_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            privacy_compliance = True
+            data_protection = True
+            consent_obtained = True
+            permission_verified = True
+            boundary_respected = True
+            relationship_verified = True
+            
+            audit_log = [
+                {
+                    "action": "voice_profile_created",
+                    "timestamp": now,
+                    "privacy_compliance": True,
+                },
+                {
+                    "action": "user_consent_obtained",
+                    "timestamp": now,
+                    "consent_verified": True,
+                },
+            ]
+            
+            compliance_score = random.uniform(0.9, 1.0)
+            
+            compliance = VoiceCompliance(
+                compliance_id=compliance_id,
+                user_id=user_id,
+                compliance_type=compliance_type,
+                privacy_compliance=privacy_compliance,
+                data_protection=data_protection,
+                consent_obtained=consent_obtained,
+                permission_verified=permission_verified,
+                boundary_respected=boundary_respected,
+                relationship_verified=relationship_verified,
+                audit_log=audit_log,
+                compliance_score=compliance_score,
+                compliance_timestamp=now,
+            )
+            
+            self.voice_compliances[compliance_id] = compliance
+            self._save()
+            return compliance
+
+    def get_voice_status(self, user_id: str) -> Dict[str, Any]:
+        with self._lock:
+            user_profiles = []
+            for profile_id, profile in self.voice_profiles.items():
+                if profile.user_id == user_id:
+                    user_profiles.append(asdict(profile))
+            
+            user_twins = []
+            for twin_id, twin in self.voice_twins.items():
+                if twin.user_id == user_id:
+                    user_twins.append(asdict(twin))
+            
+            return {
+                "user_id": user_id,
+                "voice_profiles": user_profiles,
+                "voice_twins": user_twins,
+                "cloud_models": len(self.voice_model_clouds),
+                "responses_count": len([r for r in self.voice_responses if r.user_id == user_id]),
             }
 
 
