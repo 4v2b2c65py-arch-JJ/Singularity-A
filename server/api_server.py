@@ -1831,7 +1831,8 @@ try:
     from qb_protocol.communication.timeline import communication_timeline
     from qb_protocol.communication.celestial_router import celestial_router
     from qb_protocol.communication.coordinate_system import coordinate_system
-    from qb_protocol.communication.peer_discovery import peer_discovery
+    from qb_protocol.communication.peer_discovery import live_discovery
+    from qb_protocol.communication.tor_vpn_router import tor_vpn_router
     HAS_COMMUNICATION = True
 except ImportError:
     try:
@@ -1839,7 +1840,8 @@ except ImportError:
         from communication.timeline import communication_timeline
         from communication.celestial_router import celestial_router
         from communication.coordinate_system import coordinate_system
-        from communication.peer_discovery import peer_discovery
+        from communication.peer_discovery import live_discovery
+        from communication.tor_vpn_router import tor_vpn_router
         HAS_COMMUNICATION = True
     except ImportError:
         HAS_COMMUNICATION = False
@@ -1943,12 +1945,12 @@ def clear_session_data(session_id: str, body: Dict[str, Any] = Body(...)):
 
 
 @app.get("/communication/peers/discover")
-def discover_peers(environment_type: str = "", environment_id: str = "", device_id: str = ""):
+def discover_peers(environment_type: str = "", environment_id: str = "", device_id: str = "", use_tor: bool = False):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     if environment_type and environment_id and device_id:
-        peers = peer_discovery.discover_in_environment(environment_type, environment_id, device_id)
-        return {"peers": peers, "count": len(peers)}
+        result = live_discovery.discover(context=f"environment:{environment_type}:{environment_id}", use_tor=use_tor)
+        return result
     return {"peers": [], "count": 0}
 
 
@@ -1959,9 +1961,8 @@ def discover_peers_geo(body: Dict[str, Any] = Body(...)):
     lat = float(body.get("lat", 0))
     lon = float(body.get("lon", 0))
     radius_km = float(body.get("radius_km", 50))
-    device_id = body.get("device_id", "")
-    peers = peer_discovery.discover_by_geo(lat, lon, radius_km, device_id)
-    return {"peers": peers, "count": len(peers)}
+    use_tor = bool(body.get("use_tor", False))
+    return live_discovery.discover_geo(lat, lon, radius_km, use_tor=use_tor)
 
 
 @app.post("/communication/peers/discover/btc-rank")
@@ -1970,66 +1971,123 @@ def discover_peers_btc_rank(body: Dict[str, Any] = Body(...)):
         return {"error": "communication_unavailable"}
     environment_type = body.get("environment_type", "global")
     limit = int(body.get("limit", 50))
-    device_id = body.get("device_id", "")
-    peers = peer_discovery.discover_by_btc_rank(environment_type, limit, device_id)
-    return {"peers": peers, "count": len(peers)}
+    use_tor = bool(body.get("use_tor", False))
+    return live_discovery.discover_btc_rank(environment_type, limit, use_tor=use_tor)
 
 
 @app.post("/communication/peers/register")
 def register_peer(body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    from communication.peer_discovery import PeerRecord
-    try:
-        peer = PeerRecord(
-            peer_id=body.get("peer_id", str(uuid.uuid4())),
-            user_id=body.get("user_id", ""),
-            device_id=body.get("device_id", ""),
-            environment_type=body.get("environment_type", ""),
-            environment_id=body.get("environment_id", ""),
-            dimension_id=body.get("dimension_id", ""),
-            btc_public_address=body.get("btc_public_address", ""),
-            geo=body.get("geo", {}),
-            signal_strength=float(body.get("signal_strength", 0)),
-            last_seen=datetime.utcnow().isoformat() + "Z",
-            portal_url=body.get("portal_url"),
-            metadata=body.get("metadata", {}),
-        )
-        peer_discovery.register_peer(peer)
-        return {"registered": True, "peer_id": peer.peer_id}
-    except Exception as exc:
-        return {"error": str(exc)}
+    return {
+        "registered": True,
+        "peer_id": str(uuid.uuid4()),
+        "message": "Live discovery does not persist peers. Use /communication/registry/dump for live state.",
+    }
+
+
+@app.get("/communication/registry/dump")
+def registry_dump(use_tor: bool = False):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    return live_discovery.get_registry_dump(use_tor=use_tor)
 
 
 @app.get("/communication/portals/live")
-def get_live_portals(device_id: str = ""):
+def get_live_portals(device_id: str = "", use_tor: bool = False):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    portals = peer_discovery.get_live_portals(device_id)
-    return {"portals": portals, "count": len(portals)}
+    return live_discovery.discover(context="live portals", use_tor=use_tor)
 
 
-@app.get("/communication/coordinates")
-def list_coordinates():
+@app.get("/communication/routing/status")
+def routing_status():
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    return {"coordinates": coordinate_system.list_all()}
+    return tor_vpn_router.get_status()
 
 
-@app.post("/communication/coordinates")
-def register_coordinate(body: Dict[str, Any] = Body(...)):
+@app.get("/matter-energy/status")
+def matter_energy_status():
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    return matter_energy.get_status()
+
+
+@app.post("/matter-energy/snapshot")
+def record_energy_snapshot(body: Dict[str, Any] = Body(...)):
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    device_id = body.get("device_id", "")
+    user_id = body.get("user_id", "")
+    metrics = body.get("metrics", {})
+    if not device_id:
+        return {"error": "device_id_required"}
+    snapshot = matter_energy.record_snapshot(device_id, user_id, metrics)
+    return asdict(snapshot)
+
+
+@app.get("/matter-energy/snapshot/{device_id}")
+def get_latest_snapshot(device_id: str):
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    snapshot = matter_energy.get_latest_snapshot(device_id)
+    if not snapshot:
+        return {"error": "no_snapshot"}
+    return snapshot
+
+
+@app.get("/matter-energy/compare/{device_id}")
+def compare_energy_state(device_id: str):
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    comparison = matter_energy.compare_snapshots(device_id)
+    if not comparison:
+        return {"error": "insufficient_data"}
+    return asdict(comparison)
+
+
+@app.get("/matter-energy/model-activation/{device_id}")
+def check_model_activation(device_id: str):
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    activate, reason = matter_energy.should_activate_model(device_id)
+    return {"device_id": device_id, "model_activation_recommended": activate, "reason": reason}
+
+
+@app.get("/communication/endpoints")
+def list_endpoints():
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    name = body.get("name", "")
-    latitude = float(body.get("latitude", 0))
-    longitude = float(body.get("longitude", 0))
-    altitude = body.get("altitude")
-    dimension = body.get("dimension", "earth")
-    metadata = body.get("metadata", {})
-    if not name:
-        return {"error": "name_required"}
-    coord = coordinate_system.register(name, latitude, longitude, altitude, dimension, metadata)
-    return asdict(coord)
+    return {
+        "endpoints": [
+            {
+                "endpoint": ep.endpoint,
+                "method": ep.method,
+                "path": ep.path,
+                "timeout": ep.timeout,
+                "retries": ep.retries,
+            }
+            for ep in live_discovery._endpoints
+        ]
+    }
+
+
+@app.post("/communication/endpoints")
+def add_endpoint(body: Dict[str, Any] = Body(...)):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    endpoint = body.get("endpoint", "local")
+    method = body.get("method", "GET")
+    path = body.get("path", "")
+    timeout = float(body.get("timeout", 5.0))
+    headers = body.get("headers", {})
+    params = body.get("params", {})
+    body_data = body.get("body", {})
+    if not path:
+        return {"error": "path_required"}
+    live_discovery.add_endpoint(endpoint, method, path, timeout, headers, params, body_data)
+    return {"added": True, "endpoint": endpoint, "path": path}
 
 
 @app.get("/communication/dimensions")
@@ -2518,6 +2576,64 @@ except ImportError:
         HAS_MESH_REWARDS = True
     except ImportError:
         HAS_MESH_REWARDS = False
+
+try:
+    from qb_protocol.matter_energy import matter_energy
+    HAS_MATTER_ENERGY = True
+except ImportError:
+    try:
+        from matter_energy import matter_energy
+        HAS_MATTER_ENERGY = True
+    except ImportError:
+        HAS_MATTER_ENERGY = False
+
+
+@app.get("/matter-energy/status")
+def matter_energy_status():
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    return matter_energy.get_status()
+
+
+@app.post("/matter-energy/snapshot")
+def record_energy_snapshot(body: Dict[str, Any] = Body(...)):
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    device_id = body.get("device_id", "")
+    user_id = body.get("user_id", "")
+    metrics = body.get("metrics", {})
+    if not device_id:
+        return {"error": "device_id_required"}
+    snapshot = matter_energy.record_snapshot(device_id, user_id, metrics)
+    return asdict(snapshot)
+
+
+@app.get("/matter-energy/snapshot/{device_id}")
+def get_latest_snapshot(device_id: str):
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    snapshot = matter_energy.get_latest_snapshot(device_id)
+    if not snapshot:
+        return {"error": "no_snapshot"}
+    return snapshot
+
+
+@app.get("/matter-energy/compare/{device_id}")
+def compare_energy_state(device_id: str):
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    comparison = matter_energy.compare_snapshots(device_id)
+    if not comparison:
+        return {"error": "insufficient_data"}
+    return asdict(comparison)
+
+
+@app.get("/matter-energy/model-activation/{device_id}")
+def check_model_activation(device_id: str):
+    if not HAS_MATTER_ENERGY:
+        return {"error": "matter_energy_unavailable"}
+    activate, reason = matter_energy.should_activate_model(device_id)
+    return {"device_id": device_id, "model_activation_recommended": activate, "reason": reason}
 
 
 if __name__ == "__main__":

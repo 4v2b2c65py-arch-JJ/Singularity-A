@@ -10,6 +10,8 @@ from .github_manager import GitHubManager, GitOperation, AddonInfo, SessionInfo,
 from .addon_discovery import AddonDiscovery, AddonManifest, AddonStatus, addon_discovery
 from .session_sharing import SessionSharing, DataTransfer, SharedSession, ServerClearance, SessionStatus, TransferStatus, session_sharing
 from .celestial_router import CelestialRouter, DimensionalCoordinate, Heartbeat, DataTranslation, DimensionStatus, TranslationStatus, celestial_router
+from .peer_discovery import LiveDiscovery, live_discovery
+from .tor_vpn_router import TorVPNRouter, tor_vpn_router
 from .integration import CommunicationIntegration, communication_integration
 
 __all__ = [
@@ -45,6 +47,10 @@ __all__ = [
     "DimensionStatus",
     "TranslationStatus",
     "celestial_router",
+    "LiveDiscovery",
+    "live_discovery",
+    "TorVPNRouter",
+    "tor_vpn_router",
     "CommunicationIntegration",
     "communication_integration",
 ]

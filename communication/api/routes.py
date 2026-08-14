@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 QB Protocol - Communication API Routes
-Peer discovery, live portals, celestial router, and geo-matching endpoints.
+Live discovery, registry dumps, peer matching, and geo endpoints.
 """
 
 import uuid
@@ -14,13 +14,13 @@ from datetime import datetime
 try:
     from qb_protocol.communication.celestial_router import celestial_router
     from qb_protocol.communication.coordinate_system import coordinate_system
-    from qb_protocol.communication.peer_discovery import peer_discovery
+    from qb_protocol.communication.peer_discovery import live_discovery
     HAS_COMMUNICATION = True
 except ImportError:
     try:
         from communication.celestial_router import celestial_router
         from communication.coordinate_system import coordinate_system
-        from communication.peer_discovery import peer_discovery
+        from communication.peer_discovery import live_discovery
         HAS_COMMUNICATION = True
     except ImportError:
         HAS_COMMUNICATION = False
@@ -35,7 +35,7 @@ def communication_status():
     return {
         "celestial_router": celestial_router.get_status(),
         "coordinates": coordinate_system.get_status(),
-        "peer_discovery": peer_discovery.get_status(),
+        "peer_discovery": live_discovery.get_status(),
     }
 
 
@@ -68,7 +68,7 @@ def register_dimension(body: Dict[str, Any] = Body(...)):
     if not name or not coordinates:
         return {"error": "missing_required_fields"}
     dim = celestial_router.register_dimension(name, coordinates, universe, stability, metadata)
-    return dim
+    return asdict(dim)
 
 
 @router.post("/dimensions/route")
@@ -112,86 +112,95 @@ def list_coordinates():
     return {"coordinates": coordinate_system.list_all()}
 
 
-@router.post("/peers/discover/environment")
-def discover_peers_environment(body: Dict[str, Any] = Body(...)):
+@router.get("/registry/dump")
+def registry_dump(use_tor: bool = False):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    environment_type = body.get("environment_type", "")
-    environment_id = body.get("environment_id", "")
-    device_id = body.get("device_id", "")
-    if not environment_type or not environment_id or not device_id:
-        return {"error": "missing_required_fields"}
-    peers = peer_discovery.discover_in_environment(environment_type, environment_id, device_id)
-    return {"peers": peers, "count": len(peers)}
+    return live_discovery.get_registry_dump(use_tor=use_tor)
 
 
-@router.post("/peers/discover/geo")
-def discover_peers_geo(body: Dict[str, Any] = Body(...)):
+@router.post("/discover")
+def discover_peers(body: Dict[str, Any] = Body(...)):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    context = body.get("context", "general")
+    use_tor = bool(body.get("use_tor", False))
+    use_vpn = bool(body.get("use_vpn", False))
+    return live_discovery.discover(context=context, use_tor=use_tor, use_vpn=use_vpn)
+
+
+@router.post("/discover/geo")
+def discover_geo(body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     lat = float(body.get("lat", 0))
     lon = float(body.get("lon", 0))
     radius_km = float(body.get("radius_km", 50))
-    device_id = body.get("device_id", "")
-    peers = peer_discovery.discover_by_geo(lat, lon, radius_km, device_id)
-    return {"peers": peers, "count": len(peers)}
+    use_tor = bool(body.get("use_tor", False))
+    return live_discovery.discover_geo(lat, lon, radius_km, use_tor=use_tor)
 
 
-@router.post("/peers/discover/btc-rank")
-def discover_peers_btc_rank(body: Dict[str, Any] = Body(...)):
+@router.post("/discover/btc-rank")
+def discover_btc_rank(body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     environment_type = body.get("environment_type", "global")
     limit = int(body.get("limit", 50))
-    device_id = body.get("device_id", "")
-    peers = peer_discovery.discover_by_btc_rank(environment_type, limit, device_id)
-    return {"peers": peers, "count": len(peers)}
+    use_tor = bool(body.get("use_tor", False))
+    return live_discovery.discover_btc_rank(environment_type, limit, use_tor=use_tor)
 
 
-@router.post("/peers/discover/linked")
-def discover_peers_linked(body: Dict[str, Any] = Body(...)):
+@router.get("/endpoints")
+def list_endpoints():
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    dimension_id = body.get("dimension_id", "")
-    device_id = body.get("device_id", "")
-    if not dimension_id or not device_id:
-        return {"error": "missing_required_fields"}
-    peers = peer_discovery.discover_linked_environments(dimension_id, device_id)
-    return {"peers": peers, "count": len(peers)}
+    return {
+        "endpoints": [
+            {
+                "endpoint": ep.endpoint,
+                "method": ep.method,
+                "path": ep.path,
+                "timeout": ep.timeout,
+                "retries": ep.retries,
+            }
+            for ep in live_discovery._endpoints
+        ]
+    }
+
+
+@router.post("/endpoints")
+def add_endpoint(body: Dict[str, Any] = Body(...)):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    endpoint = body.get("endpoint", "local")
+    method = body.get("method", "GET")
+    path = body.get("path", "")
+    timeout = float(body.get("timeout", 5.0))
+    headers = body.get("headers", {})
+    params = body.get("params", {})
+    body_data = body.get("body", {})
+    if not path:
+        return {"error": "path_required"}
+    live_discovery.add_endpoint(endpoint, method, path, timeout, headers, params, body_data)
+    return {"added": True, "endpoint": endpoint, "path": path}
 
 
 @router.get("/portals/live")
 def get_live_portals(device_id: str = ""):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    portals = peer_discovery.get_live_portals(device_id)
-    return {"portals": portals, "count": len(portals)}
+    return live_discovery.discover(context="live portals", use_tor=False)
 
 
 @router.post("/peers/register")
 def register_peer(body: Dict[str, Any] = Body(...)):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    from communication.peer_discovery import PeerRecord
-    try:
-        peer = PeerRecord(
-            peer_id=body.get("peer_id", str(uuid.uuid4())),
-            user_id=body.get("user_id", ""),
-            device_id=body.get("device_id", ""),
-            environment_type=body.get("environment_type", ""),
-            environment_id=body.get("environment_id", ""),
-            dimension_id=body.get("dimension_id", ""),
-            btc_public_address=body.get("btc_public_address", ""),
-            geo=body.get("geo", {}),
-            signal_strength=float(body.get("signal_strength", 0)),
-            last_seen=datetime.utcnow().isoformat() + "Z",
-            portal_url=body.get("portal_url"),
-            metadata=body.get("metadata", {}),
-        )
-        peer_discovery.register_peer(peer)
-        return {"registered": True, "peer_id": peer.peer_id}
-    except Exception as exc:
-        return {"error": str(exc)}
+    return {
+        "registered": True,
+        "peer_id": str(uuid.uuid4()),
+        "message": "Live discovery does not persist peers. Use /communication/registry/dump for live state.",
+    }
 
 
 @router.get("/")
