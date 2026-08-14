@@ -2120,6 +2120,52 @@ def streaming_grbl_to_python(body: Dict[str, Any] = Body(...)):
     return {"python_code": grbl_to_python(text)}
 
 
+@app.get("/streaming/fitgirl/latest")
+def fitgirl_latest(limit: int = 20):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    try:
+        from qb_protocol.streaming.providers.fitgirl import fitgirl_scraper
+        return {"games": fitgirl_scraper.get_latest(limit), "count": min(limit, 20)}
+    except ImportError:
+        return {"error": "fitgirl_unavailable"}
+
+
+@app.get("/streaming/fitgirl/games")
+def fitgirl_games(limit: int = 100):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    try:
+        from qb_protocol.streaming.providers.fitgirl import fitgirl_scraper
+        return {"games": fitgirl_scraper.get_games(limit), "count": min(limit, 100)}
+    except ImportError:
+        return {"error": "fitgirl_unavailable"}
+
+
+@app.post("/streaming/fitgirl/scrape")
+def fitgirl_scrape(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    try:
+        from qb_protocol.streaming.providers.fitgirl import fitgirl_scraper
+        page = body.get("page", 1)
+        games = fitgirl_scraper.scrape_page(page)
+        return {"games": [asdict(g) for g in games], "count": len(games), "page": page}
+    except ImportError:
+        return {"error": "fitgirl_unavailable"}
+
+
+@app.get("/streaming/fitgirl/status")
+def fitgirl_status():
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    try:
+        from qb_protocol.streaming.providers.fitgirl import fitgirl_scraper
+        return fitgirl_scraper.get_status()
+    except ImportError:
+        return {"error": "fitgirl_unavailable"}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=17760)
