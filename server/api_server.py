@@ -25,6 +25,10 @@ try:
 except ImportError:
     pass
 
+APP_VERSION = "2026.08.14-sat-bridge-02"
+PROTOCOL_VERSION = 2
+MIN_PROTOCOL_VERSION = 2
+
 from fastapi import FastAPI, HTTPException, Request, Body
 from fastapi.responses import JSONResponse, HTMLResponse
 from pathlib import Path
@@ -126,6 +130,27 @@ ACTIVE_CORES = Gauge("qb_active_cores", "Active cores")
 DREAM_CONVERGENCE = Gauge("qb_dream_convergence", "Dream convergence")
 SINGULARITY_RISK = Gauge("qb_singularity_risk", "Singularity risk")
 GLOBAL_COHERENCE = Gauge("qb_global_coherence", "Global coherence")
+
+
+@app.middleware("http")
+async def protocol_version_middleware(request: Request, call_next):
+    protocol_header = request.headers.get("X-Protocol-Version")
+    if protocol_header is None:
+        return JSONResponse(
+            status_code=426,
+            content={"error": "missing_protocol_version", "expected": PROTOCOL_VERSION, "minimum": MIN_PROTOCOL_VERSION},
+        )
+    try:
+        received = int(protocol_header)
+    except ValueError:
+        return JSONResponse(status_code=400, content={"error": "invalid_protocol_version"})
+    if received < MIN_PROTOCOL_VERSION:
+        return JSONResponse(
+            status_code=426,
+            content={"error": "protocol_too_old", "received": received, "minimum": MIN_PROTOCOL_VERSION},
+        )
+    response = await call_next(request)
+    return response
 
 
 class InstanceCreate(BaseModel):
@@ -646,7 +671,7 @@ def health():
     DREAM_CONVERGENCE.set(dream_engine.compute_dream_convergence())
     SINGULARITY_RISK.set(dream_engine.compute_singularity_risk())
     GLOBAL_COHERENCE.set(reality_stabilizer.get_global_coherence())
-    return {"status": "ok", "node_id": daemon.node_id, "platform": platform.system()}
+    return {"status": "ok", "node_id": daemon.node_id, "platform": platform.system(), "app_version": APP_VERSION, "protocol_version": PROTOCOL_VERSION, "transport": "tcp-http-serial-satellite"}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -2203,6 +2228,30 @@ except ImportError:
         HAS_TELECOM = True
     except ImportError:
         HAS_TELECOM = False
+
+try:
+    from qb_protocol.satellite.api.routes import router as satellite_router
+    app.include_router(satellite_router)
+    HAS_SATELLITE = True
+except ImportError:
+    try:
+        from satellite.api.routes import router as satellite_router
+        app.include_router(satellite_router)
+        HAS_SATELLITE = True
+    except ImportError:
+        HAS_SATELLITE = False
+
+try:
+    from qb_protocol.innerlan.api.routes import router as innerlan_router
+    app.include_router(innerlan_router)
+    HAS_INNERLAN = True
+except ImportError:
+    try:
+        from innerlan.api.routes import router as innerlan_router
+        app.include_router(innerlan_router)
+        HAS_INNERLAN = True
+    except ImportError:
+        HAS_INNERLAN = False
 
 
 if __name__ == "__main__":
