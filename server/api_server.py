@@ -2265,6 +2265,18 @@ except ImportError:
     except ImportError:
         HAS_ORCHESTRATOR = False
 
+try:
+    from qb_protocol.cross_platform.api.routes import router as cross_platform_router
+    app.include_router(cross_platform_router)
+    HAS_CROSS_PLATFORM = True
+except ImportError:
+    try:
+        from cross_platform.api.routes import router as cross_platform_router
+        app.include_router(cross_platform_router)
+        HAS_CROSS_PLATFORM = True
+    except ImportError:
+        HAS_CROSS_PLATFORM = False
+
 
 if __name__ == "__main__":
     import uvicorn
