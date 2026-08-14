@@ -1,0 +1,278 @@
+{
+  "addons": {
+    "agent": {
+      "addon_id": "396c241b-10c1-4f1b-b7a1-c8e8650690a9",
+      "name": "agent",
+      "description": "Auto-detected addon: agent",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/agent"
+      }
+    },
+    "ai": {
+      "addon_id": "22b88a51-0b69-40f8-8bee-336839cc2e68",
+      "name": "ai",
+      "description": "Auto-detected addon: ai",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/ai"
+      }
+    },
+    "api": {
+      "addon_id": "72f200a7-0729-45c5-b69c-023280240953",
+      "name": "api",
+      "description": "Auto-detected addon: api",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/api"
+      }
+    },
+    "chat": {
+      "addon_id": "b19d8e6f-dbe0-4eaf-9cfc-7cf87f8fd481",
+      "name": "chat",
+      "description": "Auto-detected addon: chat",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/chat"
+      }
+    },
+    "core": {
+      "addon_id": "6a7a8f13-6050-4d73-adca-75216eca5b39",
+      "name": "core",
+      "description": "Auto-detected addon: core",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/core"
+      }
+    },
+    "deploy": {
+      "addon_id": "c95e8639-6f93-4a13-9728-374f0d756908",
+      "name": "deploy",
+      "description": "Auto-detected addon: deploy",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/deploy"
+      }
+    },
+    "dream": {
+      "addon_id": "9e2a7434-9998-4c19-ba9e-df0f4cfdbe8a",
+      "name": "dream",
+      "description": "Auto-detected addon: dream",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/dream"
+      }
+    },
+    "engine": {
+      "addon_id": "f31ca0e4-11b4-4668-b2e9-cd9162d9cc66",
+      "name": "engine",
+      "description": "Auto-detected addon: engine",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/engine"
+      }
+    },
+    "evolution": {
+      "addon_id": "a7e33772-c2cd-4175-85d3-74ac82f7633d",
+      "name": "evolution",
+      "description": "Auto-detected addon: evolution",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/evolution"
+      }
+    },
+    "frontend": {
+      "addon_id": "7b95303a-316a-4e02-87a4-d17d19163a60",
+      "name": "frontend",
+      "description": "Auto-detected addon: frontend",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/frontend"
+      }
+    },
+    "gateway": {
+      "addon_id": "f478c206-e64e-43fd-b427-e5fd9b6d9c97",
+      "name": "gateway",
+      "description": "Auto-detected addon: gateway",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/gateway"
+      }
+    },
+    "models": {
+      "addon_id": "95980e93-7222-462a-8b57-3c14fc0af167",
+      "name": "models",
+      "description": "Auto-detected addon: models",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/models"
+      }
+    },
+    "oracle": {
+      "addon_id": "1138936e-2503-482d-8230-87339205c3a1",
+      "name": "oracle",
+      "description": "Auto-detected addon: oracle",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/oracle"
+      }
+    },
+    "package": {
+      "addon_id": "b7feadb4-c940-4c3d-9fe8-cbe8afdffc2c",
+      "name": "package",
+      "description": "Auto-detected addon: package",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/package"
+      }
+    },
+    "platform_pkg": {
+      "addon_id": "45e6e5f9-5152-4a5e-91b1-ddda23613c6c",
+      "name": "platform_pkg",
+      "description": "Auto-detected addon: platform_pkg",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/platform_pkg"
+      }
+    },
+    "rate": {
+      "addon_id": "f7383a41-111e-4117-9a11-7c9d74f40e44",
+      "name": "rate",
+      "description": "Auto-detected addon: rate",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/rate"
+      }
+    },
+    "sdk": {
+      "addon_id": "5b72ec96-caf5-448b-9087-acab7c31a3c2",
+      "name": "sdk",
+      "description": "Auto-detected addon: sdk",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/sdk"
+      }
+    },
+    "server": {
+      "addon_id": "5310dd9f-cbbc-47ff-bff9-889a17a8c3ec",
+      "name": "server",
+      "description": "Auto-detected addon: server",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/server"
+      }
+    },
+    "stabilizers": {
+      "addon_id": "e0cdbd9c-9169-4464-a47d-27e9ac9528ab",
+      "name": "stabilizers",
+      "description": "Auto-detected addon: stabilizers",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/stabilizers"
+      }
+    },
+    "utils": {
+      "addon_id": "10899bbe-15e1-4787-9831-ed6bfd97a6f5",
+      "name": "utils",
+      "description": "Auto-detected addon: utils",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/utils"
+      }
+    },
+    "vemex": {
+      "addon_id": "983044ea-7efd-4caa-b43c-8ff977af0405",
+      "name": "vemex",
+      "description": "Auto-detected addon: vemex",
+      "source": "local",
+      "version": "1.0.0",
+      "installed": true,
+      "enabled": true,
+      "dependencies": [],
+      "metadata": {
+        "path": "/Users/jjmarte/delta-stream/qb_protocol/vemex"
+      }
+    }
+  },
+  "sessions": {}
+}
