@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from orchestrator.agentic_sync import orchestrator
+from orchestrator.incognito_missions import incognito_mission_runner
 
 
 class Agent:
@@ -31,6 +32,10 @@ class Agent:
         print(f"agent: version={status.get('version')}")
         print(f"agent: boot_count={status.get('boot_count')}")
 
+        print("agent: starting incognito solo mission runner")
+        incognito_mission_runner.start()
+        print("agent: incognito solo mission runner started")
+
     async def heartbeat(self) -> None:
         print("agent: heartbeat")
         try:
@@ -44,6 +49,8 @@ class Agent:
 
     async def shutdown(self) -> None:
         print("agent: shutting down cleanly")
+        incognito_mission_runner.stop()
+        print("agent: incognito solo mission runner stopped")
 
     async def run(self) -> None:
         loop = asyncio.get_running_loop()

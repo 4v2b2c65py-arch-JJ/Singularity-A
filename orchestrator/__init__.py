@@ -8,6 +8,7 @@ from .agentic_sync import Orchestrator, orchestrator
 from .launchd import LaunchdService, launchd_service
 from .auto_update import AutoUpdater, auto_updater
 from .keepalive_tcp import KeepaliveTCPClient, KeepaliveTCPClientManager, keepalive_tcp_manager
+from .incognito_missions import IncognitoSoloMissionRunner, incognito_mission_runner
 
 __all__ = [
     "Orchestrator",
@@ -19,4 +20,7 @@ __all__ = [
     "KeepaliveTCPClient",
     "KeepaliveTCPClientManager",
     "keepalive_tcp_manager",
+    "IncognitoSoloMissionRunner",
+    "incognito_mission_runner",
 ]
+

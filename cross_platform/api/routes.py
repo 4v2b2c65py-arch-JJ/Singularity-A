@@ -101,6 +101,89 @@ def shell_history(limit: int = 100):
     return {"history": freedom_shell.get_history(limit=limit)}
 
 
+@router.post("/shell/chain")
+def shell_chain(body: Dict[str, Any] = Body(...)):
+    if not HAS_CROSS_PLATFORM:
+        return {"error": "cross_platform_unavailable"}
+    commands = body.get("commands", [])
+    shell = body.get("shell")
+    timeout = float(body.get("timeout", 60.0))
+    if not commands:
+        return {"error": "commands_required"}
+    results = freedom_shell.execute_chained(commands, shell=shell, timeout=timeout)
+    return {"results": [asdict(r) for r in results]}
+
+
+@router.post("/shell/pipe")
+def shell_pipe(body: Dict[str, Any] = Body(...)):
+    if not HAS_CROSS_PLATFORM:
+        return {"error": "cross_platform_unavailable"}
+    pipeline = body.get("pipeline", "")
+    shell = body.get("shell")
+    timeout = float(body.get("timeout", 60.0))
+    if not pipeline:
+        return {"error": "pipeline_required"}
+    result = freedom_shell.execute_piped(pipeline, shell=shell, timeout=timeout)
+    return asdict(result)
+
+
+@router.get("/shell/plugins")
+def shell_plugins():
+    if not HAS_CROSS_PLATFORM:
+        return {"error": "cross_platform_unavailable"}
+    return {"plugins": freedom_shell.get_plugins()}
+
+
+@router.post("/shell/translate")
+def shell_translate(body: Dict[str, Any] = Body(...)):
+    if not HAS_CROSS_PLATFORM:
+        return {"error": "cross_platform_unavailable"}
+    command = body.get("command", "")
+    target_shell = body.get("target_shell", "bash")
+    if not command:
+        return {"error": "command_required"}
+    translated = freedom_shell._build_command(target_shell, command, None)
+    return {"original": command, "translated": " ".join(translated), "shell": target_shell}
+
+
+@router.get("/shell/cmd/support")
+def cmd_support():
+    if not HAS_CROSS_PLATFORM:
+        return {"error": "cross_platform_unavailable"}
+    return {
+        "cmd_available": shutil.which("cmd.exe") or shutil.which("cmd"),
+        "cmd_modes": ["/c", "/k", "/q", "/a"],
+        "windows_commands": [
+            "dir", "copy", "move", "del", "cls", "type", "find", "findstr",
+            "sort", "more", "fc", "tree", "ipconfig", "ping", "tracert",
+            "netstat", "tasklist", "taskkill", "wmic", "powershell", "cmd"
+        ],
+        "cross_platform_equivalents": {
+            "dir": "ls",
+            "copy": "cp",
+            "move": "mv",
+            "del": "rm",
+            "cls": "clear",
+            "type": "cat",
+            "find": "grep",
+            "findstr": "grep",
+            "sort": "sort",
+            "more": "less",
+            "fc": "diff",
+            "tree": "tree",
+            "ipconfig": "ifconfig",
+            "ping": "ping",
+            "tracert": "traceroute",
+            "netstat": "netstat",
+            "tasklist": "ps aux",
+            "taskkill": "kill",
+            "wmic": "systeminfo",
+            "powershell": "pwsh",
+            "cmd": "bash",
+        }
+    }
+
+
 @router.get("/metal/devices")
 def metal_devices():
     if not HAS_CROSS_PLATFORM:

@@ -13,12 +13,14 @@ try:
     from qb_protocol.orchestrator.agentic_sync import orchestrator
     from qb_protocol.orchestrator.auto_update import auto_updater
     from qb_protocol.orchestrator.keepalive_tcp import keepalive_tcp_manager
+    from qb_protocol.orchestrator.incognito_missions import incognito_mission_runner
     HAS_ORCHESTRATOR = True
 except ImportError:
     try:
         from orchestrator.agentic_sync import orchestrator
         from orchestrator.auto_update import auto_updater
         from orchestrator.keepalive_tcp import keepalive_tcp_manager
+        from orchestrator.incognito_missions import incognito_mission_runner
         HAS_ORCHESTRATOR = True
     except ImportError:
         HAS_ORCHESTRATOR = False
@@ -187,3 +189,80 @@ def get_keepalive_client_state(client_id: str):
     if not client:
         return {"error": "client_not_found"}
     return client.get_state()
+
+
+@router.get("/missions/status")
+def missions_status():
+    if not HAS_ORCHESTRATOR:
+        return {"error": "orchestrator_unavailable"}
+    return incognito_mission_runner.get_status()
+
+
+@router.post("/missions/create")
+def create_mission(body: Dict[str, Any] = Body(...)):
+    if not HAS_ORCHESTRATOR:
+        return {"error": "orchestrator_unavailable"}
+    mission_type = body.get("mission_type", "custom")
+    payload = body.get("payload", {})
+    incognito = body.get("incognito", True)
+    priority = int(body.get("priority", 5))
+    mission = incognito_mission_runner.create_mission(
+        mission_type=mission_type,
+        payload=payload,
+        incognito=incognito,
+        priority=priority,
+    )
+    return mission
+
+
+@router.post("/missions/{mission_id}/run")
+def run_mission(mission_id: str):
+    if not HAS_ORCHESTRATOR:
+        return {"error": "orchestrator_unavailable"}
+    result = incognito_mission_runner.runner.run_mission(mission_id)
+    return asdict(result)
+
+
+@router.get("/missions/{mission_id}/status")
+def get_mission_status(mission_id: str):
+    if not HAS_ORCHESTRATOR:
+        return {"error": "orchestrator_unavailable"}
+    status = incognito_mission_runner.get_mission_status(mission_id)
+    if not status:
+        return {"error": "mission_not_found"}
+    return status
+
+
+@router.get("/missions/queue")
+def mission_queue():
+    if not HAS_ORCHESTRATOR:
+        return {"error": "orchestrator_unavailable"}
+    return {"queue": incognito_mission_runner.get_queue()}
+
+
+@router.get("/missions/history")
+def mission_history(limit: int = 100):
+    if not HAS_ORCHESTRATOR:
+        return {"error": "orchestrator_unavailable"}
+    return {"history": incognito_mission_runner.get_history(limit=limit)}
+
+
+@router.post("/missions/runner/start")
+def start_mission_runner():
+    if not HAS_ORCHESTRATOR:
+        return {"error": "orchestrator_unavailable"}
+    incognito_mission_runner.start()
+    return {"status": "started"}
+
+
+@router.post("/missions/runner/stop")
+def stop_mission_runner():
+    if not HAS_ORCHESTRATOR:
+        return {"error": "orchestrator_unavailable"}
+    incognito_mission_runner.stop()
+    return {"status": "stopped"}
+
+
+@router.get("/")
+def orchestrator_root():
+    return RedirectResponse(url="/orchestrator/status")
