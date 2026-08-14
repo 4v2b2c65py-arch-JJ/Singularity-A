@@ -3,40 +3,53 @@
   "framework": null,
   "buildCommand": "echo 'No build step for FastAPI API'",
   "outputDirectory": ".",
-  "installCommand": "echo 'No install needed for prebuilt Python venv'",
+  "installCommand": "pip install -r requirements.txt --quiet",
   "git": {
     "deploymentEnabled": false
   },
   "regions": ["iad1"],
   "env": {
-    "QB_GATEWAY_SECRET": "@qb_gateway_secret"
+    "QB_GATEWAY_SECRET": "@qb_gateway_secret",
+    "AI_MODE_ENABLED": "false",
+    "PROTOCOL_VERSION": "2"
   },
   "functions": {
-    "server/run_server.py": {
+    "api/index.py": {
       "memory": 1024,
       "maxDuration": 60
-    },
-    "api/readings.py": {
-      "memory": 512,
-      "maxDuration": 10
     }
   },
   "routes": [
     {
-      "src": "/api/readings",
-      "dest": "api/readings.py"
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
     },
     {
-      "src": "/api/health",
-      "dest": "api/readings.py"
+      "src": "/(.*)",
+      "dest": "api/index.py",
+      "continue": true
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/health",
+      "destination": "/api/health",
+      "permanent": false
     },
     {
-      "src": "/api/uptime",
-      "dest": "api/readings.py"
+      "source": "/status",
+      "destination": "/api/status",
+      "permanent": false
     },
     {
-      "src": "/api/oracle/status",
-      "dest": "api/readings.py"
+      "source": "/docs",
+      "destination": "/api/docs",
+      "permanent": false
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "/api/openapi.json",
+      "permanent": false
     }
   ]
 }
