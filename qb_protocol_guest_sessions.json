@@ -29,6 +29,21 @@
       "last_heartbeat": "2026-08-13T19:28:00.150918Z",
       "remote_server": null,
       "metadata": {}
+    },
+    "47122272-fb23-4194-8b8f-d4729e759a15": {
+      "session_id": "47122272-fb23-4194-8b8f-d4729e759a15",
+      "token": "a4cbf84a6fc89e1be2eecacf73b7ff2d",
+      "agent_id": "evolution-node",
+      "permissions": [
+        "read_env",
+        "read_status",
+        "ai_query"
+      ],
+      "issued_at": "2026-08-14T02:37:46.963925Z",
+      "expires_at": "2026-08-14T04:37:46.963937Z",
+      "last_heartbeat": "2026-08-14T02:37:46.963925Z",
+      "remote_server": "10.0.0.5",
+      "metadata": {}
     }
   }
 }
