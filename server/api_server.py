@@ -1799,6 +1799,118 @@ def consciousness_discover(body: ProtocolDiscoveryRequest):
     return {"discovered": discovered, "query": body.query}
 
 
+# ─── Communication System ──────────────────────────────────────────────────────
+
+try:
+    from qb_protocol.communication.github_manager import github_manager
+    from qb_protocol.communication.timeline import communication_timeline
+    HAS_COMMUNICATION = True
+except ImportError:
+    try:
+        from communication.github_manager import github_manager
+        from communication.timeline import communication_timeline
+        HAS_COMMUNICATION = True
+    except ImportError:
+        HAS_COMMUNICATION = False
+
+
+@app.get("/communication/status")
+def communication_status():
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    return github_manager.get_status()
+
+
+@app.post("/communication/auto-commit")
+def communication_auto_commit(body: Dict[str, Any] = {}):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    message_template = body.get("message_template", "QB Protocol: auto-sync {timestamp}")
+    return github_manager.auto_commit_push(message_template)
+
+
+@app.get("/communication/timeline/{conversation_id}")
+def get_timeline(conversation_id: str, limit: int = 100):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    return communication_timeline.get_timeline(conversation_id, limit=limit)
+
+
+@app.post("/communication/timeline/{conversation_id}/mode")
+def set_timeline_mode(conversation_id: str, body: Dict[str, Any]):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    mode = body.get("mode", "present")
+    return communication_timeline.set_active_mode(conversation_id, mode)
+
+
+@app.get("/communication/addons")
+def get_addons():
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    return github_manager.get_addons()
+
+
+@app.post("/communication/addons/{addon_id}/enable")
+def enable_addon(addon_id: str):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    return github_manager.enable_addon(addon_id)
+
+
+@app.post("/communication/addons/{addon_id}/disable")
+def disable_addon(addon_id: str):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    return github_manager.disable_addon(addon_id)
+
+
+@app.post("/communication/sessions")
+def create_shared_session(body: Dict[str, Any]):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    host = body.get("host", "system")
+    participants = body.get("participants", [])
+    from communication.session_sharing import session_sharing
+    session = session_sharing.create_session(host, participants, body.get("metadata"))
+    return asdict(session)
+
+
+@app.post("/communication/sessions/{session_id}/join")
+def join_session(session_id: str, body: Dict[str, Any]):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    participant_id = body.get("participant_id", "unknown")
+    from communication.session_sharing import session_sharing
+    return session_sharing.join_session(session_id, participant_id)
+
+
+@app.post("/communication/sessions/{session_id}/transfer")
+def transfer_data(session_id: str, body: Dict[str, Any]):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    from communication.session_sharing import session_sharing
+    import base64
+    data = base64.b64decode(body.get("data", ""))
+    result = session_sharing.transfer_data(
+        session_id=session_id,
+        from_participant=body.get("from_participant", "system"),
+        to_participant=body.get("to_participant", "system"),
+        data=data,
+        data_type=body.get("data_type", "binary"),
+    )
+    return asdict(result)
+
+
+@app.post("/communication/sessions/{session_id}/clear")
+def clear_session_data(session_id: str, body: Dict[str, Any]):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    from communication.session_sharing import session_sharing
+    participant_id = body.get("participant_id", "system")
+    return asdict(session_sharing.clear_server_data(session_id, participant_id))
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=17760)
