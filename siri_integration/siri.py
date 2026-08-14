@@ -301,29 +301,21 @@ class SiriIntegration:
         return {}
 
     def _generate_response(self, utterance: str, intent: SiriIntent, entities: Dict[str, Any], confidence: float, context: Dict[str, Any]) -> tuple[str, str, Optional[Dict[str, Any]], Optional[str], bool]:
-        """Generate structured response for Siri.
+        intent_label = intent.value if isinstance(intent, SiriIntent) else str(intent)
         
-        Routing:
-        - chat / unknown: model -> store -> fallback
-        - system intents: store -> model -> fallback
-        - private: store only
-        """
         try:
-            from qb_protocol.siri_integration.responses import siri_response_store, siri_conversation_model
+            from qb_protocol.siri_integration.responses import siri_conversation_model
         except ImportError:
             try:
-                from siri_integration.responses import siri_response_store, siri_conversation_model
+                from siri_integration.responses import siri_conversation_model
             except ImportError:
-                siri_response_store = None
                 siri_conversation_model = None
-        
-        intent_label = intent.value if isinstance(intent, SiriIntent) else str(intent)
         
         if intent == SiriIntent.CHAT or intent_label not in {
             "execute", "control", "reminder", "image", "sleep", "learn", "private"
         }:
             if siri_conversation_model:
-                model_response = siri_conversation_model.chat(utterance, context)
+                model_response = siri_conversation_model.chat(utterance)
                 if model_response:
                     return (
                         model_response.get("text") or f"AI Response: {utterance}",
@@ -338,6 +330,14 @@ class SiriIntegration:
                         bool(model_response.get("continue_session", True)),
                     )
         
+        try:
+            from qb_protocol.siri_integration.responses import siri_response_store
+        except ImportError:
+            try:
+                from siri_integration.responses import siri_response_store
+            except ImportError:
+                siri_response_store = None
+        
         if siri_response_store and intent_label != "private":
             store_response = siri_response_store.get_response(intent_label, utterance)
             if store_response:
@@ -349,106 +349,37 @@ class SiriIntegration:
                 return text, spoken, action, display, continue_session
             
             if siri_conversation_model:
-                model_response = siri_conversation_model.chat(utterance, context)
+                model_response = siri_conversation_model.chat(utterance)
                 if model_response:
                     return (
                         model_response.get("text") or f"Processed: {utterance}",
                         model_response.get("spoken") or model_response.get("text") or f"Processed: {utterance}",
-                        model_response.get("action") or store_response.get("action") if store_response else model_response.get("action"),
-                        model_response.get("display") or store_response.get("display") if store_response else model_response.get("display"),
-                        bool(model_response.get("continue_session", store_response.get("continue_session", False) if store_response else False)),
+                        model_response.get("action") or {"type": intent_label},
+                        model_response.get("display") or f"💬 {utterance[:50]}",
+                        bool(model_response.get("continue_session", True)),
                     )
         
-        if intent == SiriIntent.EXECUTE:
-            text = f"Executing: {utterance}"
-            spoken = f"I'll execute that for you now."
-            action = {
-                "type": "execute",
-                "command": utterance,
-                "requires_auth": True,
-                "backend": "agent",
-            }
-            display = f"▶️ Executing: {utterance[:50]}"
-            continue_session = False
-        elif intent == SiriIntent.CHAT:
-            text = f"AI Response: {utterance}"
-            spoken = f"Let me think about that."
-            action = {
-                "type": "chat",
-                "prompt": utterance,
-                "model": "gpt",
-                "backend": "agent",
-            }
-            display = f"💬 {utterance[:50]}"
-            continue_session = True
-        elif intent == SiriIntent.REMINDER:
-            text = f"Reminder set: {utterance}"
-            spoken = f"Reminder created."
-            action = {
-                "type": "reminder",
-                "text": utterance,
-            }
-            display = f"⏰ {utterance[:50]}"
-            continue_session = False
-        elif intent == SiriIntent.CONTROL:
-            text = f"Device control: {utterance}"
-            spoken = f"Controlling device."
-            action = {
-                "type": "device_control",
-                "command": utterance,
-                "requires_auth": True,
-            }
-            display = f"🎛️ {utterance[:50]}"
-            continue_session = False
-        elif intent == SiriIntent.PRIVATE:
-            text = "Private mode activated"
-            spoken = "Private mode is now active. Your data stays on your device."
-            action = {
-                "type": "private_mode",
-                "cloud_sync": False,
-                "local_only": True,
-            }
-            display = "🔒 Private Mode"
-            continue_session = True
-        elif intent == SiriIntent.IMAGE:
-            text = f"Generating image: {utterance}"
-            spoken = f"Creating that image for you privately."
-            action = {
-                "type": "generate_image",
-                "prompt": utterance,
-                "private": True,
-                "cloud": "icloud",
-            }
-            display = f"🎨 Generating: {utterance[:50]}"
-            continue_session = True
-        elif intent == SiriIntent.SLEEP:
-            text = "Sleep mode activated"
-            spoken = "I'll run quietly in the background without disturbing you."
-            action = {
-                "type": "sleep_mode",
-                "screen_off": True,
-                "background_only": True,
-            }
-            display = "😴 Sleep Mode"
-            continue_session = False
-        elif intent == SiriIntent.LEARN:
-            text = f"Learning: {utterance}"
-            spoken = f"I'll remember that."
-            action = {
-                "type": "learn",
-                "data": utterance,
-                "adaptive": True,
-            }
-            display = f"🧠 Learning: {utterance[:50]}"
-            continue_session = True
-        else:
-            text = f"Processed: {utterance}"
-            spoken = f"Okay."
-            action = None
-            display = None
-            continue_session = False
+        return self._fallback_response(utterance, intent)
 
-        return text, spoken, action, display, continue_session
+    def _fallback_response(self, utterance: str, intent: SiriIntent) -> Tuple[str, str, Optional[Dict[str, Any]], Optional[str], bool]:
+        if intent == SiriIntent.EXECUTE:
+            return f"Executing: {utterance}", f"I'll execute that for you now.", {"type": "execute", "command": utterance, "requires_auth": True, "backend": "agent"}, f"▶️ Executing: {utterance[:50]}", False
+        elif intent == SiriIntent.CHAT:
+            return f"AI Response: {utterance}", f"Let me think about that.", {"type": "chat", "prompt": utterance, "model": "gpt", "backend": "agent"}, f"💬 {utterance[:50]}", True
+        elif intent == SiriIntent.REMINDER:
+            return f"Reminder set: {utterance}", f"Reminder created.", {"type": "reminder", "text": utterance}, f"⏰ {utterance[:50]}", False
+        elif intent == SiriIntent.CONTROL:
+            return f"Device control: {utterance}", f"Controlling device.", {"type": "device_control", "command": utterance, "requires_auth": True}, f"🎛️ {utterance[:50]}", False
+        elif intent == SiriIntent.PRIVATE:
+            return "Private mode activated", "Private mode is now active. Your data stays on your device.", {"type": "private_mode", "cloud_sync": False, "local_only": True}, "🔒 Private Mode", True
+        elif intent == SiriIntent.IMAGE:
+            return f"Generating image: {utterance}", f"Creating that image for you privately.", {"type": "generate_image", "prompt": utterance, "private": True, "cloud": "icloud"}, f"🎨 Generating: {utterance[:50]}", True
+        elif intent == SiriIntent.SLEEP:
+            return "Sleep mode activated", "I'll run quietly in the background without disturbing you.", {"type": "sleep_mode", "screen_off": True, "background_only": True}, "😴 Sleep Mode", False
+        elif intent == SiriIntent.LEARN:
+            return f"Learning: {utterance}", f"I'll remember that.", {"type": "learn", "data": utterance, "adaptive": True}, f"🧠 Learning: {utterance[:50]}", True
+        else:
+            return f"Processed: {utterance}", f"Okay.", None, None, False
 
     def get_status(self) -> Dict[str, Any]:
         """Get status summary."""
