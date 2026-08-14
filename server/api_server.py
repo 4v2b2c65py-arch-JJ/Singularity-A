@@ -372,6 +372,18 @@ class AudioRecordingRequest(BaseModel):
     duration: float
 
 
+class EmergencyEventRequest(BaseModel):
+    user_id: str
+    vehicle_id: str
+    event_type: str
+    sensor_data: Dict[str, Any]
+
+
+class VehicleEmergencyAwarenessRequest(BaseModel):
+    user_id: str
+    vehicle_id: str
+
+
 class PrincipalityRequest(BaseModel):
     user_id: str
     principality: str = "default"
@@ -400,6 +412,11 @@ class VehicleConnectionRequest(BaseModel):
     make: str
     model: str
     year: int
+
+
+class FleetManagementRequest(BaseModel):
+    fleet_name: str
+    central_ai_id: str
 
 
 class FleetManagementRequest(BaseModel):
@@ -1579,6 +1596,29 @@ def evolution_real_time_processing(user_id: str):
         return {"error": "evolution_engine_unavailable"}
     result = evolution_engine.create_real_time_processing(user_id)
     return asdict(result)
+
+
+@app.post("/evolution/emergency-event")
+def evolution_emergency_event(body: EmergencyEventRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.detect_emergency_event(body.user_id, body.vehicle_id, body.event_type, body.sensor_data)
+    return asdict(result)
+
+
+@app.post("/evolution/vehicle-emergency-awareness")
+def evolution_vehicle_emergency_awareness(body: VehicleEmergencyAwarenessRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_vehicle_emergency_awareness(body.user_id, body.vehicle_id)
+    return asdict(result)
+
+
+@app.get("/evolution/emergency-status/{user_id}/{vehicle_id}")
+def evolution_emergency_status(user_id: str, vehicle_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_emergency_status(user_id, vehicle_id)
 
 
 if __name__ == "__main__":

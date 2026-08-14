@@ -875,7 +875,7 @@ class ModelProtection:
     protection_mechanisms: List[str]
     defense_strategies: Dict[str, Any]
     vulnerability_assessment: Dict[str, float]
- recovery_protocols: List[str]
+    recovery_protocols: List[str]
     active_defenses: List[str]
     protection_timestamp: str
 
@@ -1024,7 +1024,7 @@ class MotionCapture:
     center_of_gravity: Dict[str, float]
     torso_position: Dict[str, float]
     header_position: Dict[str, float]
-    3d_spatial_sense: Dict[str, float]
+    three_d_spatial_sense: Dict[str, float]
     gravity_sense: float
     path_adjustment: Dict[str, Any]
     maneuver_prediction: List[Dict[str, Any]]
@@ -1134,6 +1134,61 @@ class RealTimeProcessing:
 
 
 @dataclass
+class EmergencyEvent:
+    event_id: str
+    user_id: str
+    vehicle_id: str
+    event_type: str
+    severity: str
+    privacy_level: str
+    content_mature: bool
+    content_sensitive: bool
+    emergency_detected: bool
+    eminent_death_scenario: bool
+    event_description: str
+    sensor_data: Dict[str, Any]
+    location_data: Dict[str, Any]
+    timestamp: str
+    logged_for_safety: bool
+    emergency_monitor_active: bool
+
+
+@dataclass
+class VehicleEmergencyAwareness:
+    awareness_id: str
+    vehicle_id: str
+    user_id: str
+    emergency_sensors: Dict[str, bool]
+    internal_monitoring: bool
+    privacy_mode: str
+    mature_event_handling: str
+    critical_scenario_detection: bool
+    emergency_protocol: str
+    safety_log_active: bool
+    unusual_event_tracking: bool
+    emergency_contacts: List[Dict[str, str]]
+    automatic_response: bool
+    awareness_timestamp: str
+
+
+@dataclass
+class EmergencyMonitor:
+    monitor_id: str
+    user_id: str
+    vehicle_id: str
+    monitor_status: str
+    emergency_level: str
+    privacy_respect: bool
+    mature_content_handling: str
+    critical_threshold: float
+    response_protocol: str
+    emergency_contacts: List[Dict[str, str]]
+    safety_logging: bool
+    automatic_activation: bool
+    monitor_timestamp: str
+
+
+@dataclass
 class EvolutionCycle:
     cycle_id: str
     iteration: int
@@ -1200,6 +1255,9 @@ class EvolutionEngine:
         self.privacy_protections: Dict[str, PrivacyProtection] = {}
         self.audio_recordings: Dict[str, AudioRecording] = {}
         self.real_time_processings: Dict[str, RealTimeProcessing] = {}
+        self.emergency_events: List[EmergencyEvent] = []
+        self.vehicle_emergency_awareness: Dict[str, VehicleEmergencyAwareness] = {}
+        self.emergency_monitors: Dict[str, EmergencyMonitor] = {}
         self.running = False
         self.override_mode = False
         self.original_density_snapshot: Optional[Dict[str, Any]] = None
@@ -1317,6 +1375,12 @@ class EvolutionEngine:
                         self.audio_recordings[arid] = AudioRecording(**ad)
                     for rtid, rd in data.get("real_time_processings", {}).items():
                         self.real_time_processings[rtid] = RealTimeProcessing(**rd)
+                    for eid, ed in data.get("emergency_events", []):
+                        self.emergency_events.append(EmergencyEvent(**ed))
+                    for veid, vd in data.get("vehicle_emergency_awareness", {}).items():
+                        self.vehicle_emergency_awareness[veid] = VehicleEmergencyAwareness(**vd)
+                    for emid, em in data.get("emergency_monitors", {}).items():
+                        self.emergency_monitors[emid] = EmergencyMonitor(**em)
                     self.original_density_snapshot = data.get("original_density_snapshot")
             except Exception:
                 pass
@@ -1426,6 +1490,9 @@ class EvolutionEngine:
                     "privacy_protections": {pid: asdict(p) for pid, p in self.privacy_protections.items()},
                     "audio_recordings": {arid: asdict(a) for arid, a in self.audio_recordings.items()},
                     "real_time_processings": {rtid: asdict(r) for rtid, r in self.real_time_processings.items()},
+                    "emergency_events": [asdict(e) for e in self.emergency_events[-1000:]],
+                    "vehicle_emergency_awareness": {veid: asdict(v) for veid, v in self.vehicle_emergency_awareness.items()},
+                    "emergency_monitors": {emid: asdict(e) for emid, e in self.emergency_monitors.items()},
                 }, f, indent=2, default=custom_serializer)
         except Exception:
             pass
@@ -5250,6 +5317,322 @@ class EvolutionEngine:
             self.real_time_processings[processing_id] = processing
             self._save()
             return processing
+
+    def detect_emergency_event(self, user_id: str, vehicle_id: str, event_type: str, sensor_data: Dict[str, Any]) -> EmergencyEvent:
+        with self._lock:
+            event_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Determine severity
+            severity = self._determine_event_severity(event_type, sensor_data)
+            
+            # Determine privacy level
+            privacy_level = self._determine_privacy_level(event_type, severity)
+            
+            # Check if content is mature-rated
+            content_mature = self._is_mature_content(event_type, sensor_data)
+            
+            # Check if content is sensitive
+            content_sensitive = self._is_sensitive_content(event_type, sensor_data)
+            
+            # Detect emergency
+            emergency_detected = self._is_emergency_detected(event_type, sensor_data)
+            
+            # Check for eminent death scenario
+            eminent_death_scenario = self._is_eminent_death_scenario(event_type, sensor_data)
+            
+            # Create event description
+            event_description = self._generate_event_description(event_type, sensor_data, severity)
+            
+            # Location data
+            location_data = {
+                "gps_available": sensor_data.get("gps_available", False),
+                "coordinates": sensor_data.get("coordinates", {}),
+                "speed": sensor_data.get("speed", 0),
+                "heading": sensor_data.get("heading", 0),
+            }
+            
+            # Determine if emergency monitor should be active
+            emergency_monitor_active = emergency_detected or eminent_death_scenario
+            
+            event = EmergencyEvent(
+                event_id=event_id,
+                user_id=user_id,
+                vehicle_id=vehicle_id,
+                event_type=event_type,
+                severity=severity,
+                privacy_level=privacy_level,
+                content_mature=content_mature,
+                content_sensitive=content_sensitive,
+                emergency_detected=emergency_detected,
+                eminent_death_scenario=eminent_death_scenario,
+                event_description=event_description,
+                sensor_data=sensor_data,
+                location_data=location_data,
+                timestamp=now,
+                logged_for_safety=eminent_death_scenario,
+                emergency_monitor_active=emergency_monitor_active,
+            )
+            
+            self.emergency_events.append(event)
+            if len(self.emergency_events) > 10000:
+                self.emergency_events = self.emergency_events[-10000:]
+            
+            # If critical scenario, activate emergency monitor
+            if eminent_death_scenario:
+                self.activate_emergency_monitor(user_id, vehicle_id)
+            
+            self._save()
+            return event
+
+    def _determine_event_severity(self, event_type: str, sensor_data: Dict[str, Any]) -> str:
+        critical_types = ["collision", "fire", "medical_emergency", "security_breach", "loss_of_control"]
+        high_types = ["malfunction", "warning", "near_miss", "distress"]
+        medium_types = ["anomaly", "unusual_behavior", "deviation"]
+        
+        if event_type in critical_types:
+            return "critical"
+        elif event_type in high_types:
+            return "high"
+        elif event_type in medium_types:
+            return "medium"
+        else:
+            return "low"
+
+    def _determine_privacy_level(self, event_type: str, severity: str) -> str:
+        if severity == "critical":
+            return "safety_priority"  # Log for safety but respect privacy
+        elif severity == "high":
+            return "restricted"
+        else:
+            return "standard"
+
+    def _is_mature_content(self, event_type: str, sensor_data: Dict[str, Any]) -> bool:
+        mature_types = ["distress", "medical_emergency", "security_breach"]
+        return event_type in mature_types
+
+    def _is_sensitive_content(self, event_type: str, sensor_data: Dict[str, Any]) -> bool:
+        sensitive_types = ["security_breach", "loss_of_control", "collision"]
+        return event_type in sensitive_types
+
+    def _is_emergency_detected(self, event_type: str, sensor_data: Dict[str, Any]) -> bool:
+        emergency_indicators = sensor_data.get("emergency_indicators", [])
+        emergency_threshold = sensor_data.get("emergency_threshold", 0.7)
+        
+        if emergency_indicators:
+            return True
+        
+        # Check sensor data for emergency patterns
+        critical_values = sensor_data.get("critical_values", {})
+        for key, value in critical_values.items():
+            if isinstance(value, (int, float)):
+                if value > emergency_threshold:
+                    return True
+            elif isinstance(value, dict):
+                # Check nested values
+                for nested_key, nested_value in value.items():
+                    if isinstance(nested_value, (int, float)):
+                        if nested_value > emergency_threshold:
+                            return True
+        
+        return False
+
+    def _is_eminent_death_scenario(self, event_type: str, sensor_data: Dict[str, Any]) -> bool:
+        death_scenario_types = ["collision", "fire", "medical_emergency", "loss_of_control", "structural_failure"]
+        
+        if event_type not in death_scenario_types:
+            return False
+        
+        # Check for critical thresholds
+        vital_signs = sensor_data.get("vital_signs", {})
+        if isinstance(vital_signs.get("heart_rate"), (int, float)):
+            if vital_signs.get("heart_rate", 0) > 150 or vital_signs.get("heart_rate", 0) < 40:
+                return True
+        if isinstance(vital_signs.get("blood_pressure"), (int, float)):
+            if vital_signs.get("blood_pressure", 0) > 180:
+                return True
+        if isinstance(vital_signs.get("oxygen_saturation"), (int, float)):
+            if vital_signs.get("oxygen_saturation", 100) < 80:
+                return True
+        
+        # Check for immediate danger
+        immediate_danger = sensor_data.get("immediate_danger", False)
+        if immediate_danger:
+            return True
+        
+        return False
+
+    def _generate_event_description(self, event_type: str, sensor_data: Dict[str, Any], severity: str) -> str:
+        descriptions = {
+            "collision": f"Vehicle collision detected - {severity} severity",
+            "fire": f"Fire detected in vehicle - {severity} severity",
+            "medical_emergency": f"Medical emergency - {severity} severity",
+            "malfunction": f"Vehicle malfunction - {severity} severity",
+            "warning": f"Warning condition - {severity} severity",
+            "near_miss": f"Near miss incident - {severity} severity",
+            "anomaly": f"Anomaly detected - {severity} severity",
+            "security_breach": f"Security breach - {severity} severity",
+            "loss_of_control": f"Loss of vehicle control - {severity} severity",
+            "distress": f"User distress detected - {severity} severity",
+            "unusual_behavior": f"Unusual behavior - {severity} severity",
+            "deviation": f"Deviation from normal - {severity} severity",
+            "structural_failure": f"Structural failure - {severity} severity",
+        }
+        
+        return descriptions.get(event_type, f"Event detected - {severity} severity")
+
+    def create_vehicle_emergency_awareness(self, user_id: str, vehicle_id: str) -> VehicleEmergencyAwareness:
+        with self._lock:
+            awareness_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            # Emergency sensors
+            emergency_sensors = {
+                "collision_sensor": True,
+                "fire_sensor": True,
+                "medical_monitor": True,
+                "security_sensor": True,
+                "structural_monitor": True,
+            }
+            
+            internal_monitoring = True
+            privacy_mode = "respectful"
+            mature_event_handling = "respectful"
+            critical_scenario_detection = True
+            emergency_protocol = "automatic_response"
+            safety_log_active = True
+            unusual_event_tracking = True
+            
+            # Emergency contacts
+            emergency_contacts = [
+                {
+                    "contact_type": "emergency_services",
+                    "number": "911",
+                    "priority": "critical",
+                },
+                {
+                    "contact_type": "family_contact",
+                    "number": "designated",
+                    "priority": "high",
+                },
+                {
+                    "contact_type": "roadside_assistance",
+                    "number": "designated",
+                    "priority": "medium",
+                },
+            ]
+            
+            automatic_response = True
+            
+            awareness = VehicleEmergencyAwareness(
+                awareness_id=awareness_id,
+                vehicle_id=vehicle_id,
+                user_id=user_id,
+                emergency_sensors=emergency_sensors,
+                internal_monitoring=internal_monitoring,
+                privacy_mode=privacy_mode,
+                mature_event_handling=mature_event_handling,
+                critical_scenario_detection=critical_scenario_detection,
+                emergency_protocol=emergency_protocol,
+                safety_log_active=safety_log_active,
+                unusual_event_tracking=unusual_event_tracking,
+                emergency_contacts=emergency_contacts,
+                automatic_response=automatic_response,
+                awareness_timestamp=now,
+            )
+            
+            self.vehicle_emergency_awareness[awareness_id] = awareness
+            self._save()
+            return awareness
+
+    def activate_emergency_monitor(self, user_id: str, vehicle_id: str) -> EmergencyMonitor:
+        with self._lock:
+            monitor_id = str(uuid.uuid4())
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            monitor_status = "active"
+            emergency_level = "high"
+            privacy_respect = True
+            mature_content_handling = "respectful"
+            critical_threshold = 0.8
+            response_protocol = "immediate"
+            
+            # Emergency contacts
+            emergency_contacts = [
+                {
+                    "contact_type": "emergency_services",
+                    "number": "911",
+                    "priority": "critical",
+                },
+                {
+                    "contact_type": "designated_contact",
+                    "number": "configured",
+                    "priority": "high",
+                },
+            ]
+            
+            safety_logging = True
+            automatic_activation = True
+            
+            monitor = EmergencyMonitor(
+                monitor_id=monitor_id,
+                user_id=user_id,
+                vehicle_id=vehicle_id,
+                monitor_status=monitor_status,
+                emergency_level=emergency_level,
+                privacy_respect=privacy_respect,
+                mature_content_handling=mature_content_handling,
+                critical_threshold=critical_threshold,
+                response_protocol=response_protocol,
+                emergency_contacts=emergency_contacts,
+                safety_logging=safety_logging,
+                automatic_activation=automatic_activation,
+                monitor_timestamp=now,
+            )
+            
+            self.emergency_monitors[monitor_id] = monitor
+            self._save()
+            return monitor
+
+    def get_emergency_status(self, user_id: str, vehicle_id: str) -> Dict[str, Any]:
+        with self._lock:
+            # Get emergency events for this user/vehicle
+            relevant_events = []
+            for event in self.emergency_events:
+                if event.user_id == user_id and event.vehicle_id == vehicle_id:
+                    relevant_events.append({
+                        "event_id": event.event_id,
+                        "event_type": event.event_type,
+                        "severity": event.severity,
+                        "privacy_level": event.privacy_level,
+                        "emergency_detected": event.emergency_detected,
+                        "eminent_death_scenario": event.eminent_death_scenario,
+                        "timestamp": event.timestamp,
+                    })
+            
+            # Get emergency awareness
+            awareness = None
+            for awareness_id, aw in self.vehicle_emergency_awareness.items():
+                if aw.user_id == user_id and aw.vehicle_id == vehicle_id:
+                    awareness = aw
+                    break
+            
+            # Get emergency monitor
+            monitor = None
+            for monitor_id, mon in self.emergency_monitors.items():
+                if mon.user_id == user_id and mon.vehicle_id == vehicle_id:
+                    monitor = mon
+                    break
+            
+            return {
+                "user_id": user_id,
+                "vehicle_id": vehicle_id,
+                "emergency_events": relevant_events,
+                "emergency_awareness": asdict(awareness) if awareness else None,
+                "emergency_monitor": asdict(monitor) if monitor else None,
+                "monitor_status": monitor.monitor_status if monitor else "inactive",
+                "safety_logging_active": awareness.safety_log_active if awareness else False,
+            }
 
 
 evolution_engine = EvolutionEngine()
