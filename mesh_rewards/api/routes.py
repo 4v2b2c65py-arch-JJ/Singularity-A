@@ -338,11 +338,41 @@ def submit_btc_address(body: Dict[str, Any] = Body(...)):
     return asdict(ranked)
 
 
+@router.post("/multiverse/sync/tablet")
+def sync_from_tablet():
+    if not HAS_MESH_REWARDS:
+        return {"error": "mesh_rewards_unavailable"}
+    success = multiverse_ranker._sync_from_tablet()
+    return {"synced": success, "source": "tablet_oracle"}
+
+
 @router.get("/multiverse/rankings/status")
 def multiverse_rankings_status():
     if not HAS_MESH_REWARDS:
         return {"error": "mesh_rewards_unavailable"}
     return multiverse_ranker.get_status()
+
+
+@router.get("/celestial/router/assignments")
+def get_celestial_router_assignments():
+    if not HAS_MESH_REWARDS:
+        return {"error": "mesh_rewards_unavailable"}
+    try:
+        from qb_protocol.mesh_rewards.celestial_nodes import celestial_node_manager
+        assignments = {}
+        for node_id, node in celestial_node_manager.nodes.items():
+            env_key = f"{node.environment_type}/{node.environment_id}"
+            if env_key not in assignments:
+                assignments[env_key] = []
+            assignments[env_key].append({
+                "node_id": node_id,
+                "user_id": node.user_id,
+                "device_id": node.device_id,
+                "btc_public_address": node.btc_public_address,
+            })
+        return {"assignments": assignments, "source": "celestial_router"}
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
 @router.post("/fund/request")
