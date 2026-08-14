@@ -2277,6 +2277,54 @@ except ImportError:
     except ImportError:
         HAS_CROSS_PLATFORM = False
 
+try:
+    from qb_protocol.model_profile.api.routes import router as model_profile_router
+    app.include_router(model_profile_router)
+    HAS_MODEL_PROFILE = True
+except ImportError:
+    try:
+        from model_profile.api.routes import router as model_profile_router
+        app.include_router(model_profile_router)
+        HAS_MODEL_PROFILE = True
+    except ImportError:
+        HAS_MODEL_PROFILE = False
+
+try:
+    from qb_protocol.natural_systems.api.routes import router as natural_systems_router
+    app.include_router(natural_systems_router)
+    HAS_NATURAL_SYSTEMS = True
+except ImportError:
+    try:
+        from natural_systems.api.routes import router as natural_systems_router
+        app.include_router(natural_systems_router)
+        HAS_NATURAL_SYSTEMS = True
+    except ImportError:
+        HAS_NATURAL_SYSTEMS = False
+
+try:
+    from qb_protocol.boot_manager.api.routes import router as boot_manager_router
+    app.include_router(boot_manager_router)
+    HAS_BOOT_MANAGER = True
+except ImportError:
+    try:
+        from boot_manager.api.routes import router as boot_manager_router
+        app.include_router(boot_manager_router)
+        HAS_BOOT_MANAGER = True
+    except ImportError:
+        HAS_BOOT_MANAGER = False
+
+try:
+    from qb_protocol.icon_generator.api.routes import router as icon_generator_router
+    app.include_router(icon_generator_router)
+    HAS_ICON_GENERATOR = True
+except ImportError:
+    try:
+        from icon_generator.api.routes import router as icon_generator_router
+        app.include_router(icon_generator_router)
+        HAS_ICON_GENERATOR = True
+    except ImportError:
+        HAS_ICON_GENERATOR = False
+
 
 if __name__ == "__main__":
     import uvicorn
