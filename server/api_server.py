@@ -2166,6 +2166,21 @@ def fitgirl_status():
         return {"error": "fitgirl_unavailable"}
 
 
+# ─── VR Quest System ─────────────────────────────────────────────────────────
+
+try:
+    from qb_protocol.vr_quest.api.routes import router as vr_router
+    app.include_router(vr_router)
+    HAS_VR = True
+except ImportError:
+    try:
+        from vr_quest.api.routes import router as vr_router
+        app.include_router(vr_router)
+        HAS_VR = True
+    except ImportError:
+        HAS_VR = False
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=17760)
