@@ -2180,6 +2180,18 @@ except ImportError:
     except ImportError:
         HAS_VR = False
 
+try:
+    from qb_protocol.vr_quest.warp.api.routes import router as warp_router
+    app.include_router(warp_router)
+    HAS_WARP = True
+except ImportError:
+    try:
+        from vr_quest.warp.api.routes import router as warp_router
+        app.include_router(warp_router)
+        HAS_WARP = True
+    except ImportError:
+        HAS_WARP = False
+
 
 if __name__ == "__main__":
     import uvicorn
