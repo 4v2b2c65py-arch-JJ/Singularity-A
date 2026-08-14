@@ -1275,6 +1275,8 @@ class EvolutionEngine:
                         self.user_configurations[cid] = UserConfiguration(**cd)
                     for kid, kd in data.get("key_insights", {}).items():
                         self.key_insights[kid] = KeyInsights(**kd)
+                    for sd in data.get("sensory_inputs", []):
+                        self.sensory_inputs.append(SensoryInput(**sd))
                     for sid, sd in data.get("user_sessions", {}).items():
                         self.user_sessions[sid] = UserSession(**sd)
                     for mid, md in data.get("state_markers", {}).items():
@@ -1403,6 +1405,7 @@ class EvolutionEngine:
                     "federal_register_data": [asdict(f) for f in self.federal_register_data[-1000:]],
                     "user_configurations": {cid: asdict(c) for cid, c in self.user_configurations.items()},
                     "key_insights": {kid: asdict(k) for kid, k in self.key_insights.items()},
+                    "sensory_inputs": [asdict(s) for s in self.sensory_inputs[-1000:]],
                     "user_sessions": {sid: asdict(s) for sid, s in self.user_sessions.items()},
                     "state_markers": {mid: asdict(m) for mid, m in self.state_markers.items()},
                     "future_predictions": {pid: asdict(p) for pid, p in self.future_predictions.items()},
