@@ -246,8 +246,63 @@ class SiriIntegration:
         else:
             return SiriIntent.CHAT, {}, 0.5
 
+    def _get_model_response(self, utterance: str, intent: SiriIntent, context: Dict[str, Any]) -> Dict[str, Any]:
+        """Query GPT-based reasoning model for Siri response."""
+        try:
+            from qb_protocol.ai.gpt_layer import gpt_layer
+        except ImportError:
+            try:
+                from ai.gpt_layer import gpt_layer
+            except ImportError:
+                return {}
+        
+        intent_label = intent.value if isinstance(intent, SiriIntent) else str(intent)
+        prompt = (
+            f"Siri response JSON for intent {intent_label}: \"{utterance}\". "
+            "Keys: text, spoken, action(type,command), display, continue_session. "
+            "JSON only."
+        )
+        
+        try:
+            result = gpt_layer.query(prompt, max_tokens=128, temperature=0.7)
+            raw = result.get("response", "") if isinstance(result, dict) else str(result)
+            
+            start = raw.find("{")
+            end = raw.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                parsed = json.loads(raw[start:end + 1])
+                if isinstance(parsed, dict):
+                    def _normalize(value, default=""):
+                        if isinstance(value, dict):
+                            return _normalize(value.get("text", value.get("content", list(value.values())[0] if value else default)), default)
+                        if isinstance(value, list):
+                            return _normalize(value[0], default) if value else default
+                        return str(value) if value is not None else default
+                    
+                    return {
+                        "text": _normalize(parsed.get("text")),
+                        "spoken": _normalize(parsed.get("spoken")),
+                        "action": parsed.get("action") if isinstance(parsed.get("action"), dict) else None,
+                        "display": _normalize(parsed.get("display")),
+                        "continue_session": bool(parsed.get("continue_session", False)),
+                    }
+        except Exception:
+            pass
+        
+        return {}
+
     def _generate_response(self, utterance: str, intent: SiriIntent, entities: Dict[str, Any], confidence: float, context: Dict[str, Any]) -> tuple[str, str, Optional[Dict[str, Any]], Optional[str], bool]:
-        """Generate structured response for Siri."""
+        """Generate structured response for Siri using GPT-based reasoning when available."""
+        model_response = self._get_model_response(utterance, intent, context)
+        
+        if model_response:
+            text = model_response.get("text") or f"Processed: {utterance}"
+            spoken = model_response.get("spoken") or text
+            action = model_response.get("action")
+            display = model_response.get("display")
+            continue_session = model_response.get("continue_session", False)
+            return text, spoken, action, display, continue_session
+        
         if intent == SiriIntent.EXECUTE:
             text = f"Executing: {utterance}"
             spoken = f"I'll execute that for you now."
