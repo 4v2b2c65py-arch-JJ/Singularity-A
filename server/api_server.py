@@ -229,6 +229,17 @@ class ProtocolDiscoveryRequest(BaseModel):
     query: str
 
 
+class SymbolScalingRequest(BaseModel):
+    symbol: str
+    default_min: float = 1.0
+    default_max: float = 10.0
+
+
+class CertaintyEvolveRequest(BaseModel):
+    current_state: str = "unknown"
+    symbol: str = "G"
+
+
 class ChatEntryRequest(BaseModel):
     user_input: str
     model_response: str
@@ -1824,6 +1835,359 @@ def consciousness_discover(body: ProtocolDiscoveryRequest):
     return {"discovered": discovered, "query": body.query}
 
 
+@app.post("/consciousness/symbol-scaling")
+def consciousness_symbol_scaling(body: SymbolScalingRequest):
+    if not HAS_CONSCIOUSNESS_EXPANSION:
+        return {"error": "consciousness_expansion_unavailable"}
+    min_limit, max_limit = consciousness_expansion._scaling_model.get_scaled_limits(body.symbol, body.default_min, body.default_max)
+    sequence = consciousness_expansion._scaling_model.randomize_sequence(7, seed=body.symbol, min_val=body.default_min, max_val=body.default_max)
+    conduit = consciousness_expansion._scaling_model.symbol_infinite_conduit(list(body.symbol), max_scale=body.default_max)
+    return {
+        "symbol": body.symbol,
+        "min_limit": min_limit,
+        "max_limit": max_limit,
+        "randomized_sequence": sequence,
+        "infinite_conduit_value": conduit,
+    }
+
+
+@app.get("/global-clock/absolute")
+def global_clock_absolute():
+    try:
+        from qb_protocol.time.global_clock import global_clock
+        return global_clock.get_absolute_time()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/global-clock/calendar")
+def global_clock_calendar():
+    try:
+        from qb_protocol.time.global_clock import global_clock
+        return global_clock.get_calendar_metrics()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/global-clock/auto-correct")
+def global_clock_auto_correct():
+    try:
+        from qb_protocol.time.global_clock import global_clock
+        return global_clock.auto_correct_machine_timing()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/global-clock/status")
+def global_clock_status():
+    try:
+        from qb_protocol.time.global_clock import global_clock
+        return global_clock.get_status()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/certainty/evolve")
+def certainty_evolve(body: CertaintyEvolveRequest):
+    try:
+        from qb_protocol.evolution.certainty_evolution import certainty_evolution
+        result = certainty_evolution.evolve_to_finalized(
+            current_state=body.current_state,
+            symbol=body.symbol,
+        )
+        return result
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/certainty/max-out")
+def certainty_max_out():
+    try:
+        from qb_protocol.evolution.certainty_evolution import certainty_evolution
+        return certainty_evolution.max_out_stats()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/certainty/status")
+def certainty_status():
+    try:
+        from qb_protocol.evolution.certainty_evolution import certainty_evolution
+        return certainty_evolution.get_status()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+# ─── Reality Plane & Artificial Model Habitat ──────────────────────────────────
+
+@app.get("/reality/current-plane")
+def reality_current_plane():
+    try:
+        from qb_protocol.reality.reality_plane import reality_plane_manager
+        plane = reality_plane_manager.get_current_plane()
+        if not plane:
+            return {"error": "no_current_plane"}
+        return plane
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/reality/register-model")
+def reality_register_model(body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.reality_plane import reality_plane_manager
+        model = reality_plane_manager.register_model(
+            name=body.get("name", "unnamed_model"),
+            model_type=body.get("model_type", "artificial"),
+            plane_id=body.get("plane_id"),
+            context_size=int(body.get("context_size", 4096)),
+            capabilities=body.get("capabilities"),
+        )
+        return asdict(model)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/reality/models/{plane_id}")
+def reality_models_on_plane(plane_id: str):
+    try:
+        from qb_protocol.reality.reality_plane import reality_plane_manager
+        return {"plane_id": plane_id, "models": reality_plane_manager.get_models_on_plane(plane_id)}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/reality/expand-context")
+def reality_expand_context(body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.reality_plane import reality_plane_manager
+        result = reality_plane_manager.expand_model_context(
+            model_id=body.get("model_id"),
+            new_context_size=int(body.get("new_context_size", 8192)),
+        )
+        return result
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/reality/cross-environment")
+def reality_cross_environment():
+    try:
+        from qb_protocol.reality.reality_plane import reality_plane_manager
+        return reality_plane_manager.get_cross_environment_details()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/reality/status")
+def reality_status():
+    try:
+        from qb_protocol.reality.reality_plane import reality_plane_manager
+        return reality_plane_manager.get_status()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+# ─── Cloud Memory & Model Loading ─────────────────────────────────────────────
+
+@app.post("/cloud/load-model")
+def cloud_load_model(body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.cloud_memory import cloud_memory_manager
+        record = cloud_memory_manager.load_model_to_cloud(
+            model_id=body.get("model_id"),
+            model_name=body.get("model_name", "unnamed"),
+            model_type=body.get("model_type", "artificial"),
+            context_size=int(body.get("context_size", 4096)),
+            cloud_provider=body.get("cloud_provider"),
+            memory_mb=float(body.get("memory_mb", 512.0)),
+        )
+        return asdict(record)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/cloud/expand-memory")
+def cloud_expand_memory(body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.cloud_memory import cloud_memory_manager
+        result = cloud_memory_manager.expand_model_memory(
+            model_id=body.get("model_id"),
+            new_context_size=int(body.get("new_context_size", 8192)),
+            trigger=body.get("trigger", "auto"),
+        )
+        return result
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/cloud/model/{model_id}")
+def cloud_model_status(model_id: str):
+    try:
+        from qb_protocol.reality.cloud_memory import cloud_memory_manager
+        return cloud_memory_manager.get_model_status(model_id)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/cloud/models")
+def cloud_all_models():
+    try:
+        from qb_protocol.reality.cloud_memory import cloud_memory_manager
+        return {"models": cloud_memory_manager.get_all_models()}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/cloud/expansions")
+def cloud_expansion_history(limit: int = 100):
+    try:
+        from qb_protocol.reality.cloud_memory import cloud_memory_manager
+        return {"expansions": cloud_memory_manager.get_expansion_history(limit=limit)}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/cloud/status")
+def cloud_status():
+    try:
+        from qb_protocol.reality.cloud_memory import cloud_memory_manager
+        return cloud_memory_manager.get_status()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+# ─── Memory Pool & Intelligence Optimization ──────────────────────────────────
+
+@app.post("/memory/pool")
+def create_memory_pool(body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.memory_pool import intelligent_memory_pool
+        pool = intelligent_memory_pool.create_pool(
+            name=body.get("name", "default"),
+            reserved_mb=float(body.get("reserved_mb", 4096)),
+            energy_efficiency=float(body.get("energy_efficiency", 0.8)),
+        )
+        return asdict(pool)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/memory/reserve")
+def reserve_memory(body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.memory_pool import intelligent_memory_pool
+        reservation = intelligent_memory_pool.reserve_memory(
+            pool_id=body.get("pool_id"),
+            model_id=body.get("model_id"),
+            reserved_mb=float(body.get("reserved_mb", 1024)),
+            priority=int(body.get("priority", 5)),
+        )
+        return asdict(reservation)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.delete("/memory/reservation/{reservation_id}")
+def release_memory_reservation(reservation_id: str):
+    try:
+        from qb_protocol.reality.memory_pool import intelligent_memory_pool
+        intelligent_memory_pool.release_reservation(reservation_id)
+        return {"released": True, "reservation_id": reservation_id}
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/memory/optimize")
+def optimize_memory_pools():
+    try:
+        from qb_protocol.reality.memory_pool import intelligent_memory_pool
+        return intelligent_memory_pool.optimize_pools()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/memory/pool/{pool_id}")
+def memory_pool_status(pool_id: str):
+    try:
+        from qb_protocol.reality.memory_pool import intelligent_memory_pool
+        return intelligent_memory_pool.get_pool_status(pool_id)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/memory/status")
+def memory_status():
+    try:
+        from qb_protocol.reality.memory_pool import intelligent_memory_pool
+        return intelligent_memory_pool.get_status()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/intelligence/profile")
+def create_optimization_profile(body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.intelligence_optimizer import energy_dominant_optimizer
+        profile = energy_dominant_optimizer.create_profile(
+            name=body.get("name", "default"),
+            energy_efficiency_target=float(body.get("energy_efficiency_target", 0.85)),
+            memory_reserve_mb=float(body.get("memory_reserve_mb", 4096)),
+            context_size=int(body.get("context_size", 65536)),
+            batch_size=int(body.get("batch_size", 8)),
+        )
+        return asdict(profile)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/intelligence/task")
+def submit_intelligence_task(body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.intelligence_optimizer import energy_dominant_optimizer
+        task = energy_dominant_optimizer.submit_task(
+            model_id=body.get("model_id", "unknown"),
+            task_type=body.get("task_type", "reasoning"),
+            memory_cost_mb=float(body.get("memory_cost_mb", 512)),
+            estimated_duration_ms=float(body.get("estimated_duration_ms", 1000)),
+            priority=int(body.get("priority", 5)),
+        )
+        return asdict(task)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/intelligence/task/{task_id}/complete")
+def complete_intelligence_task(task_id: str, body: Dict[str, Any] = Body(...)):
+    try:
+        from qb_protocol.reality.intelligence_optimizer import energy_dominant_optimizer
+        result = energy_dominant_optimizer.complete_task(
+            task_id=task_id,
+            actual_duration_ms=float(body.get("actual_duration_ms", 1000)),
+        )
+        return result
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/intelligence/stats")
+def intelligence_optimization_stats():
+    try:
+        from qb_protocol.reality.intelligence_optimizer import energy_dominant_optimizer
+        return energy_dominant_optimizer.get_optimization_stats()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/intelligence/status")
+def intelligence_status():
+    try:
+        from qb_protocol.reality.intelligence_optimizer import energy_dominant_optimizer
+        return energy_dominant_optimizer.get_status()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
 # ─── Communication System ──────────────────────────────────────────────────────
 
 try:
@@ -1949,8 +2313,18 @@ def discover_peers(environment_type: str = "", environment_id: str = "", device_
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     if environment_type and environment_id and device_id:
-        result = live_discovery.discover(context=f"environment:{environment_type}:{environment_id}", use_tor=use_tor)
-        return result
+        try:
+            from qb_protocol.communication.celestial_router import celestial_router
+            dims = celestial_router.get_dimensions()
+            return {
+                "peers": [],
+                "count": 0,
+                "environment_type": environment_type,
+                "environment_id": environment_id,
+                "dimensions_found": len(dims),
+            }
+        except Exception as exc:
+            return {"error": str(exc)}
     return {"peers": [], "count": 0}
 
 
@@ -1997,7 +2371,11 @@ def registry_dump(use_tor: bool = False):
 def get_live_portals(device_id: str = "", use_tor: bool = False):
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
-    return live_discovery.discover(context="live portals", use_tor=use_tor)
+    try:
+        portals = live_discovery.get_live_portals(device_id)
+        return {"portals": portals, "count": len(portals)}
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
 @app.get("/communication/routing/status")
@@ -2005,6 +2383,62 @@ def routing_status():
     if not HAS_COMMUNICATION:
         return {"error": "communication_unavailable"}
     return tor_vpn_router.get_status()
+
+
+@app.get("/communication/browser/registry")
+def browser_registry():
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    try:
+        from qb_protocol.communication.browser_session import browser_session_manager
+        return browser_session_manager.get_registry()
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/communication/browser/profile")
+def create_browser_profile(body: Dict[str, Any] = Body(...)):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    try:
+        from qb_protocol.communication.browser_session import browser_session_manager
+        profile = browser_session_manager.create_profile(
+            name=body.get("name", "default"),
+            initial_cookies=body.get("cookies", {}),
+            metadata=body.get("metadata", {}),
+        )
+        return asdict(profile)
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.post("/communication/browser/request")
+def browser_request(body: Dict[str, Any] = Body(...)):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    try:
+        from qb_protocol.communication.browser_session import browser_session_manager
+        result = browser_session_manager.request_with_profile(
+            profile_id=body.get("profile_id"),
+            url=body.get("url"),
+            method=body.get("method", "GET"),
+            headers=body.get("headers"),
+            data=body.get("data"),
+            timeout=float(body.get("timeout", 10.0)),
+        )
+        return result
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
+@app.get("/communication/browser/setup")
+def browser_auto_setup(min_machines: int = 2):
+    if not HAS_COMMUNICATION:
+        return {"error": "communication_unavailable"}
+    try:
+        return live_discovery.setup_browser_automation_for_discovered(min_machines=min_machines)
+    except Exception as exc:
+        return {"error": str(exc)}
 
 
 @app.get("/matter-energy/status")

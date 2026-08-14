@@ -220,7 +220,7 @@ class UnifiedDaemon:
 
     def get_status(self) -> Dict[str, Any]:
         with self._lock:
-            return {
+            status = {
                 "node_id": self.node_id,
                 "running": self.running,
                 "uptime_seconds": self.get_uptime(),
@@ -232,6 +232,37 @@ class UnifiedDaemon:
                 "brain_state_emission_threshold": self.get_brain_state_emission_threshold(),
                 "singularity_proximity": self.get_singularity_proximity(),
             }
+            try:
+                from qb_protocol.time.global_clock import global_clock
+                status["global_clock"] = global_clock.get_status()
+            except Exception:
+                pass
+            try:
+                from qb_protocol.evolution.certainty_evolution import certainty_evolution
+                status["certainty_evolution"] = certainty_evolution.get_status()
+            except Exception:
+                pass
+            try:
+                from qb_protocol.reality.reality_plane import reality_plane_manager
+                status["reality_plane"] = reality_plane_manager.get_status()
+            except Exception:
+                pass
+            try:
+                from qb_protocol.reality.cloud_memory import cloud_memory_manager
+                status["cloud_memory"] = cloud_memory_manager.get_status()
+            except Exception:
+                pass
+            try:
+                from qb_protocol.reality.memory_pool import intelligent_memory_pool
+                status["memory_pool"] = intelligent_memory_pool.get_status()
+            except Exception:
+                pass
+            try:
+                from qb_protocol.reality.intelligence_optimizer import energy_dominant_optimizer
+                status["intelligence_optimizer"] = energy_dominant_optimizer.get_status()
+            except Exception:
+                pass
+            return status
 
     async def start(self):
         self.running = True

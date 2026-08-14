@@ -17,7 +17,7 @@ import subprocess
 import hashlib
 import base64
 from pathlib import Path
-from typing import Dict, Any, Optional, List, Callable
+from typing import Dict, Any, Optional, List, Callable, Tuple
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 from enum import Enum
@@ -47,6 +47,7 @@ class MissionType(Enum):
     DEPLOY = "deploy"
     UPDATE = "update"
     REBOOT = "reboot"
+    BROWSER_AUTOMATION = "browser_automation"
     CUSTOM = "custom"
 
 
@@ -171,6 +172,8 @@ class IncognitoMissionRunner:
                 output, error, environment_details, artifacts = self._run_update(mission)
             elif mission.mission_type == MissionType.REBOOT.value:
                 output, error, environment_details, artifacts = self._run_reboot(mission)
+            elif mission.mission_type == MissionType.BROWSER_AUTOMATION.value:
+                output, error, environment_details, artifacts = self._run_browser_automation(mission)
             else:
                 output, error, environment_details, artifacts = self._run_custom(mission)
 
@@ -297,6 +300,44 @@ class IncognitoMissionRunner:
             output = json.dumps(result, indent=2)
             env_details = {"reboot": result}
             return output, "", env_details, ["reboot_scheduled.json"]
+        except Exception as e:
+            return "", str(e), {}, []
+
+    def _run_browser_automation(self, mission: Mission) -> Tuple[str, str, Dict[str, Any], List[str]]:
+        try:
+            from qb_protocol.communication.browser_session import browser_session_manager
+            action = mission.payload.get("action", "discover")
+            endpoints = mission.payload.get("endpoints", [])
+            profile_name = mission.payload.get("profile_name", "default")
+
+            if action == "discover" and endpoints:
+                results = browser_session_manager.discover_browser_targets(endpoints)
+                output = json.dumps(results, indent=2)
+                env_details = {"discovered": len(results), "results": results}
+                artifacts = ["browser_discovery.json"]
+                return output, "", env_details, artifacts
+
+            elif action == "create_profile":
+                profile = browser_session_manager.create_profile(
+                    name=profile_name,
+                    initial_cookies=mission.payload.get("cookies", {}),
+                    metadata=mission.payload.get("metadata", {}),
+                )
+                output = json.dumps(asdict(profile), indent=2)
+                env_details = {"profile": asdict(profile)}
+                artifacts = ["browser_profile.json"]
+                return output, "", env_details, artifacts
+
+            elif action == "registry":
+                registry = browser_session_manager.get_registry()
+                output = json.dumps(registry, indent=2)
+                env_details = registry
+                artifacts = ["browser_registry.json"]
+                return output, "", env_details, artifacts
+
+            else:
+                return "", f"unknown_browser_action:{action}", {}, []
+
         except Exception as e:
             return "", str(e), {}, []
 

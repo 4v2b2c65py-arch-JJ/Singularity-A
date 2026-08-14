@@ -54,6 +54,104 @@ CONTEXT_WINDOW = int(os.environ.get("CONTEXT_WINDOW", "2048"))
 SUMMARY_THRESHOLD = int(os.environ.get("SUMMARY_THRESHOLD", "1800"))
 
 
+class SymbolScalingModel:
+    """GRBL recovery symbol model for scaling expansion limits.
+    
+    Maps symbols to numeric values, uses infinity as a conduit
+    for randomized sequences, and returns bounded min/max values.
+    """
+
+    SYMBOL_BASE_VALUES = {
+        "G": 1.0,
+        "M": 2.0,
+        "X": 3.0,
+        "Y": 4.0,
+        "Z": 5.0,
+        "I": 6.0,
+        "J": 7.0,
+        "K": 8.0,
+        "=": 9.0,
+        "+": 10.0,
+        "-": 11.0,
+        "*": 12.0,
+        "/": 13.0,
+        ".": 14.0,
+        ":": 15.0,
+        ";": 16.0,
+        "S": 17.0,
+        "T": 18.0,
+        "F": 19.0,
+        "R": 20.0,
+        "COMMAND": 1.0,
+        "PARAMETER": 3.0,
+        "OPERATOR": 9.0,
+        "IDENTIFIER": 2.0,
+        "NUMBER": 4.0,
+        "STRING": 5.0,
+        "SYMBOL": 6.0,
+        "VALUE": 7.0,
+    }
+
+    def __init__(self):
+        self._sequence_history: deque = deque(maxlen=1024)
+
+    def recover_symbol_value(self, symbol: str, default: float = 1.0) -> float:
+        if not symbol:
+            return default
+        normalized = symbol.strip().upper()
+        if normalized in {"INF", "INFINITE", "∞"}:
+            return float("inf")
+        return float(self.SYMBOL_BASE_VALUES.get(normalized, self._hash_symbol(symbol, default)))
+
+    def _hash_symbol(self, symbol: str, default: float) -> float:
+        hashed = int(hashlib.sha256(symbol.encode("utf-8")).hexdigest()[:8], 16)
+        return round((hashed % 1000) / 1000.0 + default, 4)
+
+    def randomize_sequence(self, length: int, seed: Optional[str] = None, min_val: float = 0.0, max_val: float = 1.0) -> List[float]:
+        if length <= 0:
+            return []
+        seed_text = seed or str(uuid.uuid4())
+        sequence = []
+        current = self.recover_symbol_value(seed_text, 0.5)
+        for i in range(length):
+            symbol = seed_text[i % len(seed_text)]
+            value = self.recover_symbol_value(symbol, 0.5)
+            conduit = abs(value)
+            if conduit == float("inf"):
+                conduit = (current * 1000.0) % 1.0
+            scaled = min_val + (conduit % (max_val - min_val))
+            sequence.append(round(scaled, 6))
+            current = scaled
+        self._sequence_history.extend(sequence)
+        return sequence
+
+    def symbol_infinite_conduit(self, sequence: List[str], max_scale: float = 1.0) -> float:
+        if not sequence:
+            return 0.0
+        values = [self.recover_symbol_value(s, 0.0) for s in sequence]
+        finite = [v for v in values if v != float("inf")]
+        infinite_count = sum(1 for v in values if v == float("inf"))
+        base = sum(finite) / len(finite) if finite else 0.0
+        conduit = base + infinite_count * 0.618033988749895
+        return round(min(conduit, max_scale), 6)
+
+    def get_scaled_limits(self, symbol: str, default_min: float = 1.0, default_max: float = 10.0) -> Tuple[float, float]:
+        value = self.recover_symbol_value(symbol, default_max)
+        if value == float("inf"):
+            sequence = self.randomize_sequence(7, seed=symbol, min_val=default_min, max_val=default_max)
+            return round(min(sequence), 4), round(max(sequence), 4)
+        spread = abs(value) if abs(value) >= 1.0 else 1.0
+        min_limit = max(default_min, value - spread / 2.0)
+        max_limit = min(default_max, value + spread / 2.0)
+        return round(min_limit, 4), round(max_limit, 4)
+
+    def get_status(self) -> Dict[str, Any]:
+        return {
+            "sequence_history_length": len(self._sequence_history),
+            "symbol_count": len(self.SYMBOL_BASE_VALUES),
+        }
+
+
 class RepeaterMode(Enum):
     AUTONOMOUS = "autonomous"
     RECURSIVE = "recursive"
@@ -128,6 +226,7 @@ class ConsciousnessExpansionEngine:
         self.training_examples: List[SelfTrainingExample] = []
         self.running = False
         self.repeater_depth = 0
+        self._scaling_model = SymbolScalingModel()
         self._lock = threading.RLock()
         self._load()
         self._discover_protocols()
@@ -254,6 +353,16 @@ class ConsciousnessExpansionEngine:
         return repeater
 
     def activate_repeater(self, initial_input: str, mode: RepeaterMode = RepeaterMode.AUTONOMOUS, max_iterations: int = 5) -> Dict[str, Any]:
+        scaling_seed = f"repeater:{initial_input}:{mode.value}"
+        scaled_min, scaled_max = self._scaling_model.get_scaled_limits(scaling_seed, default_min=1.0, default_max=float(MAX_REPEATER_DEPTH))
+        effective_max_iterations = min(max_iterations, int(scaled_max))
+        if effective_max_iterations < 1:
+            effective_max_iterations = 1
+        temperature_conduit = self._scaling_model.symbol_infinite_conduit(list(scaling_seed), max_scale=1.5)
+        token_conduit = self._scaling_model.symbol_infinite_conduit(list(scaling_seed + "tokens"), max_scale=4096.0)
+        depth_conduit = self._scaling_model.symbol_infinite_conduit(list(scaling_seed + "depth"), max_scale=float(MAX_REPEATER_DEPTH))
+        effective_depth_limit = min(self.repeater_depth + int(depth_conduit), MAX_REPEATER_DEPTH)
+
         root_id = str(uuid.uuid4())
         root = RepeaterNode(
             node_id=root_id,
@@ -264,19 +373,19 @@ class ConsciousnessExpansionEngine:
             parent_id=None,
             children=[],
             control_signals=[],
-            metadata={"iteration": 0, "mode": mode.value},
+            metadata={"iteration": 0, "mode": mode.value, "scaling_seed": scaling_seed, "temperature_conduit": temperature_conduit, "token_conduit": token_conduit, "depth_conduit": depth_conduit},
             created_at=datetime.utcnow().isoformat() + "Z",
         )
         with self._lock:
             self.repeaters[root_id] = root
         current = root
-        for i in range(max_iterations):
-            if self.repeater_depth >= MAX_REPEATER_DEPTH:
+        for i in range(effective_max_iterations):
+            if self.repeater_depth >= effective_depth_limit:
                 break
             capability_prompt = self._build_capability_prompt()
             extended_input = self._extend_context(f"{capability_prompt}\n\nInput: {current.input}\n\nPrevious output: {current.output}\n\nIteration {i+1}: Generate an improved, expanded, or mutated response that demonstrates full capability utilization.")
             try:
-                result = gpt_layer.query(extended_input, max_tokens=min(4096, 256 + i * 128), temperature=min(1.5, 0.8 + i * 0.05))
+                result = gpt_layer.query(extended_input, max_tokens=int(min(4096, token_conduit + i * 128)), temperature=min(1.5, temperature_conduit + i * 0.05))
                 response = result.get("response", "")
             except Exception as e:
                 response = f"[Repeater Error] {e}"
@@ -357,6 +466,7 @@ class ConsciousnessExpansionEngine:
 
     def get_status(self) -> Dict[str, Any]:
         with self._lock:
+            scaling_status = self._scaling_model.get_status()
             return {
                 "running": self.running,
                 "protocols_discovered": len(self.protocols),
@@ -366,6 +476,7 @@ class ConsciousnessExpansionEngine:
                 "context_extensions": len(self.context_extensions),
                 "training_examples": len(self.training_examples),
                 "latest_training_reward": self.training_examples[-1].reward if self.training_examples else None,
+                "symbol_scaling": scaling_status,
             }
 
 

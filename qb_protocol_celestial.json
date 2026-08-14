@@ -1,0 +1,38 @@
+{
+  "dimensions": {
+    "fb680993-68b8-4afb-bee6-ed9a8b05b80b": {
+      "dimension_id": "fb680993-68b8-4afb-bee6-ed9a8b05b80b",
+      "name": "Earth Timeline",
+      "coordinates": {
+        "lat": 40.7128,
+        "lon": -74.006,
+        "alt": 0
+      },
+      "universe": "earth",
+      "timestamp": "2026-08-14T14:10:19.411497Z",
+      "stability": 1.0,
+      "connections": [],
+      "metadata": {
+        "portal_url": "portal://earth/timeline/t1"
+      }
+    },
+    "36f7ed53-b5db-4453-902b-ab5e815fff42": {
+      "dimension_id": "36f7ed53-b5db-4453-902b-ab5e815fff42",
+      "name": "Mars Colony Alpha",
+      "coordinates": {
+        "lat": 0,
+        "lon": 0,
+        "alt": 0
+      },
+      "universe": "mars",
+      "timestamp": "2026-08-14T14:58:01.921960Z",
+      "stability": 0.85,
+      "connections": [],
+      "metadata": {
+        "portal_url": "portal://mars/colony/alpha"
+      }
+    }
+  },
+  "heartbeats": {},
+  "translations": []
+}

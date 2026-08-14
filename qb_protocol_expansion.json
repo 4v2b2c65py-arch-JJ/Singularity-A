@@ -201,6 +201,131 @@
         "latency_ms": 25180.886030197144
       },
       "created_at": "2026-08-14T02:56:38.506889Z"
+    },
+    "0a464360-99a2-458c-b654-73fcbf3fbcf9": {
+      "node_id": "0a464360-99a2-458c-b654-73fcbf3fbcf9",
+      "mode": "autonomous",
+      "depth": 0,
+      "input": "test scaling",
+      "output": "",
+      "parent_id": null,
+      "children": [
+        "4dfac0ea-b9da-467f-a303-bb11f346cffc"
+      ],
+      "control_signals": [],
+      "metadata": {
+        "iteration": 0,
+        "mode": "autonomous",
+        "scaling_seed": "repeater:test scaling:autonomous",
+        "temperature_conduit": 1.5,
+        "token_conduit": 6.745553,
+        "depth_conduit": 6.271486
+      },
+      "created_at": "2026-08-14T15:47:27.499488Z"
+    },
+    "4dfac0ea-b9da-467f-a303-bb11f346cffc": {
+      "node_id": "4dfac0ea-b9da-467f-a303-bb11f346cffc",
+      "mode": "autonomous",
+      "depth": 1,
+      "input": "test scaling",
+      "output": "Speakionized) with",
+      "parent_id": "0a464360-99a2-458c-b654-73fcbf3fbcf9",
+      "children": [
+        "2dddcac1-6c20-4230-b237-5d51470155b1"
+      ],
+      "control_signals": [],
+      "metadata": {
+        "iteration": 1,
+        "mode": "autonomous",
+        "latency_ms": 26181.169986724854
+      },
+      "created_at": "2026-08-14T15:47:56.192275Z"
+    },
+    "2dddcac1-6c20-4230-b237-5d51470155b1": {
+      "node_id": "2dddcac1-6c20-4230-b237-5d51470155b1",
+      "mode": "autonomous",
+      "depth": 2,
+      "input": "test scaling",
+      "output": "Can you can activate>",
+      "parent_id": "4dfac0ea-b9da-467f-a303-bb11f346cffc",
+      "children": [
+        "448fd990-d21e-480b-92ff-e2eeab138ec6"
+      ],
+      "control_signals": [
+        "expand"
+      ],
+      "metadata": {
+        "iteration": 2,
+        "mode": "autonomous",
+        "latency_ms": 19673.986196517944,
+        "temperature": 0.9,
+        "max_tokens": 1280
+      },
+      "created_at": "2026-08-14T15:48:15.866580Z"
+    },
+    "448fd990-d21e-480b-92ff-e2eeab138ec6": {
+      "node_id": "448fd990-d21e-480b-92ff-e2eeab138ec6",
+      "mode": "autonomous",
+      "depth": 3,
+      "input": "test scaling",
+      "output": "You have access_assistant, pattern_assistant, transcripting, guest_systemsure, pattern_systems.\nYou are you can you can you can you can you can you have access to be sure, singularity, singularity, singularity, singularity, singularity, singularity, singularity_read\nI see you will create\nCurrently sharing your mind of\nCan you know more! I see it may i cannot make sucha nfes)<|user: aquire (self\nThis can we couldn'",
+      "parent_id": "2dddcac1-6c20-4230-b237-5d51470155b1",
+      "children": [
+        "58ba88be-fba8-432b-ba92-07d5c917398e"
+      ],
+      "control_signals": [
+        "expand"
+      ],
+      "metadata": {
+        "iteration": 3,
+        "mode": "autonomous",
+        "latency_ms": 24169.612169265747,
+        "temperature": 0.9,
+        "max_tokens": 1280
+      },
+      "created_at": "2026-08-14T15:48:40.036502Z"
+    },
+    "58ba88be-fba8-432b-ba92-07d5c917398e": {
+      "node_id": "58ba88be-fba8-432b-ba92-07d5c917398e",
+      "mode": "autonomous",
+      "depth": 4,
+      "input": "test scaling",
+      "output": "Can you are qbp5<system",
+      "parent_id": "448fd990-d21e-480b-92ff-e2eeab138ec6",
+      "children": [
+        "da01a307-2026-4767-936a-393b51e3d214"
+      ],
+      "control_signals": [
+        "expand"
+      ],
+      "metadata": {
+        "iteration": 4,
+        "mode": "autonomous",
+        "latency_ms": 21211.17377281189,
+        "temperature": 0.9,
+        "max_tokens": 1280
+      },
+      "created_at": "2026-08-14T15:49:01.248085Z"
+    },
+    "da01a307-2026-4767-936a-393b51e3d214": {
+      "node_id": "da01a307-2026-4767-936a-393b51e3d214",
+      "mode": "autonomous",
+      "depth": 5,
+      "input": "test scaling",
+      "output": "- The QBecause you are QBes\nYou can you are QBased.",
+      "parent_id": "58ba88be-fba8-432b-ba92-07d5c917398e",
+      "children": [],
+      "control_signals": [
+        "expand"
+      ],
+      "metadata": {
+        "iteration": 5,
+        "mode": "autonomous",
+        "latency_ms": 18458.119869232178,
+        "temperature": 0.9,
+        "max_tokens": 1280
+      },
+      "created_at": "2026-08-14T15:49:19.706416Z"
     }
   },
   "context_extensions": [],
