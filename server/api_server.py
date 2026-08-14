@@ -2253,6 +2253,18 @@ except ImportError:
     except ImportError:
         HAS_INNERLAN = False
 
+try:
+    from qb_protocol.orchestrator.api.routes import router as orchestrator_router
+    app.include_router(orchestrator_router)
+    HAS_ORCHESTRATOR = True
+except ImportError:
+    try:
+        from orchestrator.api.routes import router as orchestrator_router
+        app.include_router(orchestrator_router)
+        HAS_ORCHESTRATOR = True
+    except ImportError:
+        HAS_ORCHESTRATOR = False
+
 
 if __name__ == "__main__":
     import uvicorn
