@@ -301,17 +301,45 @@ class SiriIntegration:
         return {}
 
     def _generate_response(self, utterance: str, intent: SiriIntent, entities: Dict[str, Any], confidence: float, context: Dict[str, Any]) -> tuple[str, str, Optional[Dict[str, Any]], Optional[str], bool]:
-        """Generate structured response for Siri using cloud-backed store first, GPT second, hardcoded last."""
+        """Generate structured response for Siri.
+        
+        Routing:
+        - chat / unknown: model -> store -> fallback
+        - system intents: store -> model -> fallback
+        - private: store only
+        """
         try:
-            from qb_protocol.siri_integration.responses import siri_response_store
+            from qb_protocol.siri_integration.responses import siri_response_store, siri_conversation_model
         except ImportError:
             try:
-                from siri_integration.responses import siri_response_store
+                from siri_integration.responses import siri_response_store, siri_conversation_model
             except ImportError:
                 siri_response_store = None
+                siri_conversation_model = None
         
-        if siri_response_store:
-            store_response = siri_response_store.get_response(intent.value, utterance)
+        intent_label = intent.value if isinstance(intent, SiriIntent) else str(intent)
+        
+        if intent == SiriIntent.CHAT or intent_label not in {
+            "execute", "control", "reminder", "image", "sleep", "learn", "private"
+        }:
+            if siri_conversation_model:
+                model_response = siri_conversation_model.chat(utterance, context)
+                if model_response:
+                    return (
+                        model_response.get("text") or f"AI Response: {utterance}",
+                        model_response.get("spoken") or model_response.get("text") or f"AI Response: {utterance}",
+                        {
+                            "type": "chat",
+                            "prompt": utterance,
+                            "model": "gpt",
+                            "backend": "agent",
+                        },
+                        model_response.get("display") or f"💬 {utterance[:50]}",
+                        bool(model_response.get("continue_session", True)),
+                    )
+        
+        if siri_response_store and intent_label != "private":
+            store_response = siri_response_store.get_response(intent_label, utterance)
             if store_response:
                 text = store_response.get("text") or f"Processed: {utterance}"
                 spoken = store_response.get("spoken") or text
@@ -319,16 +347,17 @@ class SiriIntegration:
                 display = store_response.get("display")
                 continue_session = bool(store_response.get("continue_session", False))
                 return text, spoken, action, display, continue_session
-        
-        model_response = self._get_model_response(utterance, intent, context)
-        
-        if model_response:
-            text = model_response.get("text") or f"Processed: {utterance}"
-            spoken = model_response.get("spoken") or text
-            action = model_response.get("action")
-            display = model_response.get("display")
-            continue_session = model_response.get("continue_session", False)
-            return text, spoken, action, display, continue_session
+            
+            if siri_conversation_model:
+                model_response = siri_conversation_model.chat(utterance, context)
+                if model_response:
+                    return (
+                        model_response.get("text") or f"Processed: {utterance}",
+                        model_response.get("spoken") or model_response.get("text") or f"Processed: {utterance}",
+                        model_response.get("action") or store_response.get("action") if store_response else model_response.get("action"),
+                        model_response.get("display") or store_response.get("display") if store_response else model_response.get("display"),
+                        bool(model_response.get("continue_session", store_response.get("continue_session", False) if store_response else False)),
+                    )
         
         if intent == SiriIntent.EXECUTE:
             text = f"Executing: {utterance}"
