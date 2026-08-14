@@ -3,216 +3,167 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>QB Protocol - Quick Usage</title>
+<title>QB Protocol - Live Chat</title>
 <style>
   * { box-sizing: border-box; }
   body { font-family: -apple-system, Blur, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b0d12; color: #e5e7eb; margin: 0; }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px; }
-  h1 { font-size: 28px; margin: 0 0 8px; }
-  .sub { color: #9ca3af; margin-bottom: 24px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-  .card { background: #0f1117; border: 1px solid #1f2937; border-radius: 14px; padding: 18px; }
-  .card h3 { margin: 0 0 10px; font-size: 16px; color: #38bdf8; }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  .sub { color: #9ca3af; margin-bottom: 18px; }
+  .card { background: #0f1117; border: 1px solid #1f2937; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
   .row { display: flex; gap: 8px; margin-top: 10px; }
   input, button, select, textarea { font: inherit; color: inherit; }
   input, select, textarea { background: #0b0d12; border: 1px solid #2a2f3a; border-radius: 10px; padding: 10px 12px; width: 100%; }
   button { background: #2563eb; border: 0; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
   button.secondary { background: #1f2937; }
-  .out { background: #000; border: 1px solid #2a2f3a; border-radius: 10px; padding: 12px; min-height: 120px; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 12px; color: #bef264; }
+  .chat { background: #000; border: 1px solid #2a2f3a; border-radius: 10px; padding: 12px; min-height: 420px; max-height: 70vh; overflow-y: auto; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 13px; color: #e5e7eb; }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
   .badge { display: inline-block; background: rgba(56,189,248,0.12); color: #38bdf8; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .msg { margin: 8px 0; padding: 8px 10px; border-radius: 10px; }
+  .msg.user { background: #111827; border: 1px solid #1f2937; }
+  .msg.assistant { background: #0b1a1a; border: 1px solid #134e4a; color: #d1fae5; }
 </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>QB Protocol</h1>
-    <div class="sub">Quick usage frontend for hosted API · Vercel-ready · Secure by default</div>
+    <h1>QB Protocol Live Chat</h1>
+    <div class="sub">Direct TinyLlama integration · No artificial constraints · Full architecture context</div>
 
-    <div class="grid">
-      <div class="card">
-        <h3>Connection</h3>
-        <input id="baseUrl" value="http://localhost:17761" />
-        <div class="row">
-          <button onclick="setBase()">Set</button>
-          <button class="secondary" onclick="health()">Health</button>
-          <button class="secondary" onclick="status()">Status</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Entry / Agent</h3>
-        <input id="agentId" placeholder="agent-id" value="agent-001" />
-        <div class="row">
-          <button onclick="issueEntry()">Issue Entry</button>
-          <button class="secondary" onclick="validateEntry()">Validate</button>
-        </div>
-        <input id="entryCode" placeholder="entry_code" style="margin-top:8px" />
-        <input id="signature" placeholder="signature" style="margin-top:8px" />
-      </div>
-
-      <div class="card">
-        <h3>Instances</h3>
-        <input id="instanceName" placeholder="instance name" value="demo-instance" />
-        <div class="row">
-          <button onclick="createInstance()">Create</button>
-          <button class="secondary" onclick="startInstance()">Start</button>
-          <button class="secondary" onclick="stopInstance()">Stop</button>
-        </div>
-        <input id="instanceId" placeholder="instance_id" style="margin-top:8px" />
-      </div>
-
-      <div class="card">
-        <h3>IP Quick Connect</h3>
-        <select id="ipProvider">
-          <option value="ip-api">ip-api (no login)</option>
-          <option value="ipify">ipify (no login)</option>
-          <option value="freegeoip">freegeoip (no login)</option>
-          <option value="ipdata">ipdata</option>
-        </select>
-        <div class="row">
-          <button onclick="quickIP()">Quick IP</button>
-          <button class="secondary" onclick="lookupIP()">Lookup IP</button>
-        </div>
-        <input id="lookupIp" placeholder="optional ip" style="margin-top:8px" />
-      </div>
-
-      <div class="card">
-        <h3>Dream Engine</h3>
-        <input id="dreamDepth" type="number" placeholder="depth" value="0.5" />
-        <textarea id="dreamProjection" placeholder='{"type":"projection"}'>{ "type": "demo" }</textarea>
-        <div class="row">
-          <button onclick="createDreamLayer()">Create Layer</button>
-          <button class="secondary" onclick="dreamStatus()">Status</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Healing</h3>
-        <div class="row">
-          <button onclick="triggerRegen()">Regen</button>
-          <button class="secondary" onclick="healingStatus()">Status</button>
-        </div>
-        <div style="margin-top:10px" class="badge">Self-feeding healing loop</div>
-      </div>
-
-      <div class="card" style="grid-column: 1 / -1;">
-        <h3>Live Chat - TinyLlama</h3>
-        <div id="chatHistory" class="out" style="min-height:220px; color:#e5e7eb; text-align:left;"></div>
-        <div class="row" style="margin-top:10px;">
-          <input id="chatInput" placeholder="Type a message..." />
-          <button onclick="sendChat()">Send</button>
-          <button class="secondary" onclick="clearChat()">Clear</button>
-        </div>
-        <div class="row" style="margin-top:8px;">
-          <input id="chatMaxTokens" type="number" placeholder="max_tokens" value="128" style="width:140px" />
-          <input id="chatTemp" type="number" placeholder="temperature" value="0.7" step="0.1" style="width:140px" />
-        </div>
+    <div class="card">
+      <h3>Connection</h3>
+      <div class="row">
+        <input id="baseUrl" value="http://localhost:17760" />
+        <button onclick="setBase()">Set Endpoint</button>
+        <button class="secondary" onclick="health()">Health</button>
       </div>
     </div>
 
-    <div class="card" style="margin-top:16px">
-      <h3>Response</h3>
-      <div id="out" class="out">Ready.</div>
+    <div class="card">
+      <h3>Live Chat</h3>
+      <div id="chatHistory" class="chat"></div>
+      <div class="row" style="margin-top:10px;">
+        <input id="chatInput" placeholder="Say something..." />
+        <button onclick="sendChat()">Send</button>
+        <button class="secondary" onclick="clearChat()">Clear</button>
+      </div>
+      <div class="row">
+        <input id="chatMaxTokens" type="number" placeholder="max_tokens" value="1024" style="width:160px" />
+        <input id="chatTemp" type="number" placeholder="temperature" value="0.8" step="0.1" style="width:160px" />
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Consciousness Expansion</h3>
+      <div class="row">
+        <input id="repeaterPrompt" placeholder="Repeater input..." style="flex:1" />
+        <select id="repeaterMode">
+          <option value="autonomous">Autonomous</option>
+          <option value="recursive">Recursive</option>
+          <option value="exploratory">Exploratory</option>
+          <option value="convergent">Convergent</option>
+          <option value="transcendent">Transcendent</option>
+        </select>
+        <input id="repeaterIters" type="number" placeholder="iterations" value="5" style="width:100px" />
+        <button onclick="activateRepeater()">Repeater</button>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <input id="selfTrainPrompt" placeholder="Original prompt..." style="flex:1" />
+        <input id="selfTrainResponse" placeholder="Original response..." style="flex:1" />
+        <button onclick="selfTrain()">Self-Train</button>
+      </div>
+      <div id="expansionOut" class="chat" style="min-height:120px; margin-top:10px;">Ready.</div>
     </div>
 
     <div class="row-actions">
-      <span class="badge">Vercel-ready</span>
-      <span class="badge">Sensitive env vars only</span>
-      <span class="badge">No NEXT_PUBLIC_ secrets</span>
-      <span class="badge">Launchd persistent service</span>
-      <span class="badge">Entry signature enforced</span>
+      <span class="badge">Local model</span>
+      <span class="badge">No login required</span>
+      <span class="badge">Persistent service</span>
+      <span class="badge">Vemex + Oracle context</span>
+      <span class="badge">Repeater mode</span>
+      <span class="badge">Self-training</span>
     </div>
   </div>
 
 <script>
-  const out = document.getElementById('out');
-  function base() { return document.getElementById('baseUrl').value.replace(/\\/$/, '') || 'http://localhost:17761'; }
-  function show(x) { out.textContent = typeof x === 'string' ? x : JSON.stringify(x, null, 2); }
-  async function req(path, opts={}) {
-    const res = await fetch(base() + path, { headers: {'Content-Type':'application/json'}, ...opts });
-    const data = await res.json().catch(()=>({raw: await res.text()}));
-    show({status: res.status, data});
+  const baseEl = document.getElementById('baseUrl');
+  const chatEl = document.getElementById('chatHistory');
+  const expansionEl = document.getElementById('expansionOut');
+  function base() { return baseEl.value.replace(/\/$/, '') || 'http://localhost:17760'; }
+  function setBase() { appendExpansion('system', 'Endpoint set to ' + base()); }
+  function append(role, text) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = (role === 'user' ? 'You: ' : 'Model: ') + text;
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
   }
-  function setBase(){ show({base: base()}); }
-  function health(){ req('/health'); }
-  function status(){ req('/status'); }
-  function issueEntry(){
-    const agentId = document.getElementById('agentId').value || 'agent-001';
-    req('/entry/issue', {method:'POST', body: JSON.stringify({agent_id: agentId, ttl_seconds: 3600})});
+  function appendExpansion(role, text) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = (role === 'user' ? 'You: ' : 'System: ') + text;
+    expansionEl.appendChild(div);
+    expansionEl.scrollTop = expansionEl.scrollHeight;
   }
-  function validateEntry(){
-    const entry_code = document.getElementById('entryCode').value;
-    const signature = document.getElementById('signature').value;
-    const agent_id = document.getElementById('agentId').value;
-    req('/entry/validate', {method:'POST', body: JSON.stringify({entry_code, signature, agent_id})});
-  }
-  function createInstance(){
-    const entry_code = document.getElementById('entryCode').value;
-    const signature = document.getElementById('signature').value;
-    const agent_id = document.getElementById('agentId').value;
-    const name = document.getElementById('instanceName').value || 'demo-instance';
-    const body = {name, platform: navigator.platform};
-    if(entry_code && signature) body.entry = {entry_code, signature, agent_id};
-    req('/instances', {method:'POST', body: JSON.stringify(body)});
-  }
-  function startInstance(){
-    const instanceId = document.getElementById('instanceId').value;
-    if(!instanceId){ show('instance_id required'); return; }
-    req('/instances/' + encodeURIComponent(instanceId) + '/start', {method:'POST'});
-  }
-  function stopInstance(){
-    const instanceId = document.getElementById('instanceId').value;
-    if(!instanceId){ show('instance_id required'); return; }
-    req('/instances/' + encodeURIComponent(instanceId) + '/stop', {method:'POST'});
-  }
-  function quickIP(){ req('/ip/quick-connect'); }
-  function lookupIP(){
-    const ip = document.getElementById('lookupIp').value;
-    const provider = document.getElementById('ipProvider').value;
-    req('/ip/lookup', {method:'POST', body: JSON.stringify({ip: ip || null, provider})});
-  }
-  function createDreamLayer(){
-    const depth = parseFloat(document.getElementById('dreamDepth').value || '0.5');
-    let projection = {};
-    try { projection = JSON.parse(document.getElementById('dreamProjection').value || '{}'); } catch(e){}
-    const entry_code = document.getElementById('entryCode').value;
-    const signature = document.getElementById('signature').value;
-    const agent_id = document.getElementById('agentId').value;
-    const body = {depth, projection, convergence: 0.8, brain_state_emission: 0.0, singularity_threshold: 0.0};
-    if(entry_code && signature) body.entry = {entry_code, signature, agent_id};
-    req('/dream/layers', {method:'POST', body: JSON.stringify(body)});
-  }
-  function dreamStatus(){ req('/dream/status'); }
-  function triggerRegen(){ req('/healing/regen', {method:'POST'}); }
-  function healingStatus(){ req('/healing/status'); }
-  function appendChat(role, text){
-    const hist = document.getElementById('chatHistory');
-    const line = document.createElement('div');
-    line.style.marginBottom = '8px';
-    line.innerHTML = '<strong>' + (role==='user' ? 'You' : 'Model') + ':</strong> ' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    hist.appendChild(line);
-    hist.scrollTop = hist.scrollHeight;
-  }
-  async function sendChat(){
+  async function sendChat() {
     const input = document.getElementById('chatInput');
     const text = input.value.trim();
-    if(!text) return;
-    appendChat('user', text);
+    if (!text) return;
+    append('user', text);
     input.value = '';
-    const maxTokens = parseInt(document.getElementById('chatMaxTokens').value || '128', 10);
-    const temperature = parseFloat(document.getElementById('chatTemp').value || '0.7');
-    const body = {prompt: text, max_tokens: maxTokens, temperature: temperature};
+    const maxTokens = parseInt(document.getElementById('chatMaxTokens').value || '1024', 10);
+    const temperature = parseFloat(document.getElementById('chatTemp').value || '0.8');
     try {
-      const res = await fetch(base() + '/ai/query', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-      const data = await res.json().catch(()=>({raw: await res.text()}));
-      appendChat('assistant', data.response || JSON.stringify(data));
-    } catch(e) {
-      appendChat('assistant', '[Error] ' + e.message);
+      const res = await fetch(base() + '/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text, max_tokens: maxTokens, temperature: temperature })
+      });
+      const data = await res.json().catch(() => ({ raw: await res.text() }));
+      append('assistant', data.reply || JSON.stringify(data));
+    } catch (e) {
+      append('assistant', '[Error] ' + e.message);
     }
   }
-  function clearChat(){
-    document.getElementById('chatHistory').textContent = '';
+  function clearChat() { chatEl.innerHTML = ''; }
+  async function activateRepeater() {
+    const prompt = document.getElementById('repeaterPrompt').value.trim();
+    if (!prompt) return;
+    appendExpansion('user', 'Repeater: ' + prompt);
+    const mode = document.getElementById('repeaterMode').value;
+    const iters = parseInt(document.getElementById('repeaterIters').value || '5', 10);
+    try {
+      const res = await fetch(base() + '/consciousness/repeater', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, mode, max_iterations: iters })
+      });
+      const data = await res.json().catch(() => ({ raw: await res.text() }));
+      appendExpansion('assistant', JSON.stringify(data, null, 2));
+    } catch (e) {
+      appendExpansion('assistant', '[Error] ' + e.message);
+    }
   }
+  async function selfTrain() {
+    const prompt = document.getElementById('selfTrainPrompt').value.trim();
+    const response = document.getElementById('selfTrainResponse').value.trim();
+    if (!prompt || !response) return;
+    appendExpansion('user', 'Self-train: ' + prompt);
+    try {
+      const res = await fetch(base() + '/consciousness/self-train', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, response })
+      });
+      const data = await res.json().catch(() => ({ raw: await res.text() }));
+      appendExpansion('assistant', JSON.stringify(data, null, 2));
+    } catch (e) {
+      appendExpansion('assistant', '[Error] ' + e.message);
+    }
+  }
+  function health() {
+    fetch(base() + '/health').then(r => r.json()).then(d => appendExpansion('system', JSON.stringify(d)));
+  }
+  document.getElementById('chatInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
 </script>
 </body>
 </html>

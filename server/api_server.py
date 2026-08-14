@@ -100,6 +100,16 @@ except ImportError:
     except ImportError:
         HAS_AGENTIC = False
 
+try:
+    from qb_protocol.evolution.consciousness_expansion import consciousness_expansion, RepeaterMode, ControlSignal
+    HAS_CONSCIOUSNESS_EXPANSION = True
+except ImportError:
+    try:
+        from evolution.consciousness_expansion import consciousness_expansion, RepeaterMode, ControlSignal
+        HAS_CONSCIOUSNESS_EXPANSION = True
+    except ImportError:
+        HAS_CONSCIOUSNESS_EXPANSION = False
+
 LOG = logging.getLogger("qb_protocol.api")
 QB_STATE_FILE = Path(__file__).resolve().parent.parent / "qb_protocol_state.json"
 SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
@@ -177,6 +187,21 @@ class AccelerationRequest(BaseModel):
     skill_id: str
     approximation_factor: float = 1.0
     replication_mode: str = "forward"
+
+
+class RepeaterActivateRequest(BaseModel):
+    prompt: str
+    mode: str = "autonomous"
+    max_iterations: int = 5
+
+
+class SelfTrainRequest(BaseModel):
+    prompt: str
+    response: str
+
+
+class ProtocolDiscoveryRequest(BaseModel):
+    query: str
 
 
 class ChatEntryRequest(BaseModel):
@@ -992,8 +1017,8 @@ def guest_revoke(session_id: str, token: str):
 
 class AIQueryRequest(BaseModel):
     prompt: str
-    max_tokens: int = 256
-    temperature: float = 0.7
+    max_tokens: int = 1024
+    temperature: float = 0.8
 
 
 @app.get("/ai/status")
@@ -1011,6 +1036,26 @@ def ai_query(body: AIQueryRequest):
         raise HTTPException(status_code=400, detail="prompt_required")
     result = gpt_layer.query(body.prompt, max_tokens=body.max_tokens, temperature=body.temperature)
     return result
+
+
+@app.post("/ai/chat")
+def ai_chat(body: AIQueryRequest):
+    if not HAS_AI:
+        return {"error": "ai_mode_unavailable"}
+    if not body.prompt:
+        raise HTTPException(status_code=400, detail="prompt_required")
+    actual_max = max(1, min(body.max_tokens, 4096))
+    actual_temp = max(0.1, min(body.temperature, 1.5))
+    result = gpt_layer.query(body.prompt, max_tokens=actual_max, temperature=actual_temp)
+    return {
+        "reply": result.get("response", ""),
+        "model": result.get("model"),
+        "provider": result.get("provider"),
+        "latency_ms": result.get("latency_ms"),
+        "tokens_used": result.get("tokens_used"),
+        "query_id": result.get("query_id"),
+        "timestamp": result.get("timestamp"),
+    }
 
 
 @app.get("/ai/history")
@@ -1709,6 +1754,49 @@ def evolution_voice_status(user_id: str):
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.get_voice_status(user_id)
+
+
+@app.get("/consciousness/status")
+def consciousness_status():
+    if not HAS_CONSCIOUSNESS_EXPANSION:
+        return {"error": "consciousness_expansion_unavailable"}
+    return consciousness_expansion.get_status()
+
+
+@app.post("/consciousness/repeater")
+def consciousness_repeater(body: RepeaterActivateRequest):
+    if not HAS_CONSCIOUSNESS_EXPANSION:
+        return {"error": "consciousness_expansion_unavailable"}
+    mode = RepeaterMode(body.mode) if body.mode in [m.value for m in RepeaterMode] else RepeaterMode.AUTONOMOUS
+    result = consciousness_expansion.activate_repeater(body.prompt, mode=mode, max_iterations=body.max_iterations)
+    return result
+
+
+@app.post("/consciousness/self-train")
+def consciousness_self_train(body: SelfTrainRequest):
+    if not HAS_CONSCIOUSNESS_EXPANSION:
+        return {"error": "consciousness_expansion_unavailable"}
+    result = consciousness_expansion.self_train(body.prompt, body.response)
+    return result
+
+
+@app.get("/consciousness/protocols")
+def consciousness_protocols():
+    if not HAS_CONSCIOUSNESS_EXPANSION:
+        return {"error": "consciousness_expansion_unavailable"}
+    protocols = consciousness_expansion.get_status()
+    return {"protocols": list(consciousness_expansion.protocols.values()), "status": protocols}
+
+
+@app.post("/consciousness/discover")
+def consciousness_discover(body: ProtocolDiscoveryRequest):
+    if not HAS_CONSCIOUSNESS_EXPANSION:
+        return {"error": "consciousness_expansion_unavailable"}
+    discovered = []
+    for pid, proto in consciousness_expansion.protocols.items():
+        if body.query.lower() in proto.name.lower() or body.query.lower() in proto.category.lower():
+            discovered.append(asdict(proto))
+    return {"discovered": discovered, "query": body.query}
 
 
 if __name__ == "__main__":

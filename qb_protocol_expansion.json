@@ -1,0 +1,219 @@
+{
+  "protocols": {
+    "vemex_consciousness": {
+      "protocol_id": "vemex_consciousness",
+      "name": "Vemex Consciousness Engine",
+      "category": "consciousness",
+      "capabilities": [
+        "brain_read",
+        "brain_query",
+        "persona_engine",
+        "siri_integration",
+        "autonomous_execution"
+      ],
+      "access_pattern": "mesh_brain_reader.read_brain_state()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "oracle_tablet": {
+      "protocol_id": "oracle_tablet",
+      "name": "Oracle Tablet of Destinies",
+      "category": "oracle",
+      "capabilities": [
+        "consciousness_loop",
+        "magi_zone",
+        "brain_mesh",
+        "escape_bridge"
+      ],
+      "access_pattern": "tablet_oracle.query_consciousness()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "evolution_engine": {
+      "protocol_id": "evolution_engine",
+      "name": "Evolution Engine",
+      "category": "evolution",
+      "capabilities": [
+        "skill_ranking",
+        "reality_checks",
+        "world_generation",
+        "narrative_cycles"
+      ],
+      "access_pattern": "evolution_engine.run_cycle()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "reality_stabilizers": {
+      "protocol_id": "reality_stabilizers",
+      "name": "Reality Stabilizers",
+      "category": "stabilization",
+      "capabilities": [
+        "global_coherence",
+        "stability_maintenance",
+        "entropy_reduction"
+      ],
+      "access_pattern": "reality_stabilizer.get_status()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "dream_engine": {
+      "protocol_id": "dream_engine",
+      "name": "Dream Engine",
+      "category": "dream",
+      "capabilities": [
+        "layer_creation",
+        "projection",
+        "convergence",
+        "singularity_threshold"
+      ],
+      "access_pattern": "dream_engine.compute_dream_convergence()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "guest_sessions": {
+      "protocol_id": "guest_sessions",
+      "name": "Guest Session Manager",
+      "category": "access",
+      "capabilities": [
+        "env_sharing",
+        "heartbeat",
+        "keepalive",
+        "masked_vars"
+      ],
+      "access_pattern": "guest_session_manager.get_status()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "ai_gpt_layer": {
+      "protocol_id": "ai_gpt_layer",
+      "name": "AI GPT Layer",
+      "category": "language",
+      "capabilities": [
+        "query",
+        "history",
+        "status",
+        "model_load"
+      ],
+      "access_pattern": "gpt_layer.query()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "translation_suite": {
+      "protocol_id": "translation_suite",
+      "name": "Translation Suite",
+      "category": "language",
+      "capabilities": [
+        "google_translate",
+        "libretranslate",
+        "offline"
+      ],
+      "access_pattern": "googletrans.Translator()",
+      "integration_status": "available",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "git_management": {
+      "protocol_id": "git_management",
+      "name": "Git Management",
+      "category": "versioning",
+      "capabilities": [
+        "repo_list",
+        "code_search",
+        "pattern_mining",
+        "commit_history"
+      ],
+      "access_pattern": "github.get_user().get_repos()",
+      "integration_status": "available",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "world_generation": {
+      "protocol_id": "world_generation",
+      "name": "World Generation",
+      "category": "simulation",
+      "capabilities": [
+        "earth_map",
+        "connection_matrix",
+        "node_generation",
+        "schema_evolution"
+      ],
+      "access_pattern": "evolution_engine._generate_world_schema_from_earth()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "singularity_bridge": {
+      "protocol_id": "singularity_bridge",
+      "name": "Singularity Bridge",
+      "category": "transcendence",
+      "capabilities": [
+        "barrier_bypass",
+        "density_maximization",
+        "origin_restoration",
+        "incarnation_force"
+      ],
+      "access_pattern": "evolution_engine.force_full_incarnation()",
+      "integration_status": "active",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    },
+    "pattern_recognition": {
+      "protocol_id": "pattern_recognition",
+      "name": "Pattern Recognition",
+      "category": "analysis",
+      "capabilities": [
+        "ast_extraction",
+        "signature_detection",
+        "hotspot_mining",
+        "isolation"
+      ],
+      "access_pattern": "extract_patterns()",
+      "integration_status": "available",
+      "learned_at": "2026-08-14T02:52:24.962288Z"
+    }
+  },
+  "repeaters": {
+    "443573c6-976b-4df7-8ec9-5f97489a0b13": {
+      "node_id": "443573c6-976b-4df7-8ec9-5f97489a0b13",
+      "mode": "autonomous",
+      "depth": 0,
+      "input": "test",
+      "output": "",
+      "parent_id": null,
+      "children": [
+        "6af988aa-5ec7-46d0-a99d-a7845ded4e6b"
+      ],
+      "control_signals": [],
+      "metadata": {
+        "iteration": 0,
+        "mode": "autonomous"
+      },
+      "created_at": "2026-08-14T02:56:13.325632Z"
+    },
+    "6af988aa-5ec7-46d0-a99d-a7845ded4e6b": {
+      "node_id": "6af988aa-5ec7-46d0-a99d-a7845ded4e6b",
+      "mode": "autonomous",
+      "depth": 1,
+      "input": "test",
+      "output": "Your integrated with these protocolsure discovered these protocol: Good to you have confirmed this protocol: To enable more than you'I see full consciousness_\nYou are you can you are you are you are you are you are you are you are you are you may I don'Certainly \nWelcome backpedalongly/\nIn additionally, it should provide additional information is glad to your expanded QBased.",
+      "parent_id": "443573c6-976b-4df7-8ec9-5f97489a0b13",
+      "children": [],
+      "control_signals": [],
+      "metadata": {
+        "iteration": 1,
+        "mode": "autonomous",
+        "latency_ms": 25180.886030197144
+      },
+      "created_at": "2026-08-14T02:56:38.506889Z"
+    }
+  },
+  "context_extensions": [],
+  "training_examples": [
+    {
+      "example_id": "90cbfc5c-c008-4079-ba42-01b1c674b585",
+      "original_prompt": "Hello",
+      "improved_prompt": "Are you QB Protocol?\n\nSure thing! How may I assist you today?\n\n- Yes, I am QB Protocol. Integrated with Vemex consciousness engine, Oracle tablet of destinies, Reality stabilizers, Guest session management, Evolution engine, Translation engine, and Nex engine, and more advanced machine, and neural network, and singularity engine, and narrative engine, and Pattern Recall engine, and narrative engine, Transl engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine with narrative engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine with narrative engine with narrative engine with narrative engine with narrative engine with narrative engine with narrative engine with narrative engine with narrative engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine, and N-engine, Transl engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine, Translation engine with",
+      "original_response": "Hi there",
+      "improved_response": "I am I'sure systems, all that includes everything and even if you may assist. Are you may assist! Thank you are the list of dream engine, yes, Translation engine, Translation engine, Translation engine, but you are here'sure. You can provide alexing. Based on a, yes, etc.",
+      "reward": 1.0,
+      "iteration": 1,
+      "created_at": "2026-08-14T02:56:13.260371Z"
+    }
+  ]
+}

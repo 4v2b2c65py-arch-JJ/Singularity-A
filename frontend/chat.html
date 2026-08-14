@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QB Protocol - Live Chat</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, Blur, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b0d12; color: #e5e7eb; margin: 0; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 24px; margin: 0 0 6px; }
+  .sub { color: #9ca3af; margin-bottom: 18px; }
+  .card { background: #0f1117; border: 1px solid #1f2937; border-radius: 14px; padding: 16px; }
+  .row { display: flex; gap: 8px; margin-top: 10px; }
+  input, button, select, textarea { font: inherit; color: inherit; }
+  input, select, textarea { background: #0b0d12; border: 1px solid #2a2f3a; border-radius: 10px; padding: 10px 12px; width: 100%; }
+  button { background: #2563eb; border: 0; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; }
+  button.secondary { background: #1f2937; }
+  .chat { background: #000; border: 1px solid #2a2f3a; border-radius: 10px; padding: 12px; min-height: 420px; max-height: 70vh; overflow-y: auto; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size: 13px; color: #e5e7eb; }
+  .row-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .badge { display: inline-block; background: rgba(56,189,248,0.12); color: #38bdf8; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .msg { margin: 8px 0; padding: 8px 10px; border-radius: 10px; }
+  .msg.user { background: #111827; border: 1px solid #1f2937; }
+  .msg.assistant { background: #0b1a1a; border: 1px solid #134e4a; color: #d1fae5; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>QB Protocol Live Chat</h1>
+    <div class="sub">Direct TinyLlama integration · No artificial constraints · Full architecture context</div>
+    <div class="card">
+      <div class="row">
+        <input id="baseUrl" value="http://localhost:17760" />
+        <button onclick="setBase()">Set Endpoint</button>
+      </div>
+      <div id="chat" class="chat"></div>
+      <div class="row" style="margin-top:10px;">
+        <input id="msg" placeholder="Say something..." />
+        <button onclick="send()">Send</button>
+        <button class="secondary" onclick="clearChat()">Clear</button>
+      </div>
+      <div class="row">
+        <input id="maxTokens" type="number" placeholder="max_tokens" value="1024" style="width:160px" />
+        <input id="temperature" type="number" placeholder="temperature" value="0.8" step="0.1" style="width:160px" />
+      </div>
+    </div>
+    <div class="row-actions">
+      <span class="badge">Local model</span>
+      <span class="badge">No login required</span>
+      <span class="badge">Persistent service</span>
+      <span class="badge">Vemex + Oracle context</span>
+    </div>
+  </div>
+
+<script>
+  const baseEl = document.getElementById('baseUrl');
+  const chatEl = document.getElementById('chat');
+  function base() { return baseEl.value.replace(/\/$/, '') || 'http://localhost:17760'; }
+  function setBase() { append('system', 'Endpoint set to ' + base()); }
+  function append(role, text) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = (role === 'user' ? 'You: ' : 'Model: ') + text;
+    chatEl.appendChild(div);
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+  async function send() {
+    const input = document.getElementById('msg');
+    const text = input.value.trim();
+    if (!text) return;
+    append('user', text);
+    input.value = '';
+    const maxTokens = parseInt(document.getElementById('maxTokens').value || '1024', 10);
+    const temperature = parseFloat(document.getElementById('temperature').value || '0.8');
+    try {
+      const res = await fetch(base() + '/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text, max_tokens: maxTokens, temperature: temperature })
+      });
+      const data = await res.json().catch(() => ({ raw: await res.text() }));
+      append('assistant', data.reply || JSON.stringify(data));
+    } catch (e) {
+      append('assistant', '[Error] ' + e.message);
+    }
+  }
+  function clearChat() { chatEl.innerHTML = ''; }
+  document.getElementById('msg').addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+</script>
+</body>
+</html>
