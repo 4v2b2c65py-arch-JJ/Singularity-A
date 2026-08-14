@@ -2192,6 +2192,18 @@ except ImportError:
     except ImportError:
         HAS_WARP = False
 
+try:
+    from qb_protocol.telecom.api.routes import router as telecom_router
+    app.include_router(telecom_router)
+    HAS_TELECOM = True
+except ImportError:
+    try:
+        from telecom.api.routes import router as telecom_router
+        app.include_router(telecom_router)
+        HAS_TELECOM = True
+    except ImportError:
+        HAS_TELECOM = False
+
 
 if __name__ == "__main__":
     import uvicorn
