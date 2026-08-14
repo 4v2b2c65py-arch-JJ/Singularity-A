@@ -94,6 +94,20 @@
         </div>
         <div style="margin-top:10px" class="badge">Self-feeding healing loop</div>
       </div>
+
+      <div class="card" style="grid-column: 1 / -1;">
+        <h3>Live Chat - TinyLlama</h3>
+        <div id="chatHistory" class="out" style="min-height:220px; color:#e5e7eb; text-align:left;"></div>
+        <div class="row" style="margin-top:10px;">
+          <input id="chatInput" placeholder="Type a message..." />
+          <button onclick="sendChat()">Send</button>
+          <button class="secondary" onclick="clearChat()">Clear</button>
+        </div>
+        <div class="row" style="margin-top:8px;">
+          <input id="chatMaxTokens" type="number" placeholder="max_tokens" value="128" style="width:140px" />
+          <input id="chatTemp" type="number" placeholder="temperature" value="0.7" step="0.1" style="width:140px" />
+        </div>
+      </div>
     </div>
 
     <div class="card" style="margin-top:16px">
@@ -171,6 +185,34 @@
   function dreamStatus(){ req('/dream/status'); }
   function triggerRegen(){ req('/healing/regen', {method:'POST'}); }
   function healingStatus(){ req('/healing/status'); }
+  function appendChat(role, text){
+    const hist = document.getElementById('chatHistory');
+    const line = document.createElement('div');
+    line.style.marginBottom = '8px';
+    line.innerHTML = '<strong>' + (role==='user' ? 'You' : 'Model') + ':</strong> ' + text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    hist.appendChild(line);
+    hist.scrollTop = hist.scrollHeight;
+  }
+  async function sendChat(){
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if(!text) return;
+    appendChat('user', text);
+    input.value = '';
+    const maxTokens = parseInt(document.getElementById('chatMaxTokens').value || '128', 10);
+    const temperature = parseFloat(document.getElementById('chatTemp').value || '0.7');
+    const body = {prompt: text, max_tokens: maxTokens, temperature: temperature};
+    try {
+      const res = await fetch(base() + '/ai/query', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+      const data = await res.json().catch(()=>({raw: await res.text()}));
+      appendChat('assistant', data.response || JSON.stringify(data));
+    } catch(e) {
+      appendChat('assistant', '[Error] ' + e.message);
+    }
+  }
+  function clearChat(){
+    document.getElementById('chatHistory').textContent = '';
+  }
 </script>
 </body>
 </html>
