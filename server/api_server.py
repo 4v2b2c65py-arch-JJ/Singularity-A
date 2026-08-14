@@ -315,6 +315,140 @@ class FamilyBranchQueryRequest(BaseModel):
     query_params: Dict[str, Any]
 
 
+class UserSessionRequest(BaseModel):
+    user_id: str
+    credential_data: Dict[str, Any]
+    individual_fields: Dict[str, Any]
+
+
+class FuturePredictionRequest(BaseModel):
+    user_id: str
+    time_horizon: str = "short_term"
+
+
+class AffairSupportRequest(BaseModel):
+    user_id: str
+    affair_type: str
+
+
+class PrincipalityRequest(BaseModel):
+    user_id: str
+    principality: str = "default"
+
+
+class RoboticConnectionRequest(BaseModel):
+    user_id: str
+    device_type: str
+    platform: str
+
+
+class MobileMirroringRequest(BaseModel):
+    user_id: str
+    device_platform: str
+    host_device: str
+
+
+class MotionCaptureRequest(BaseModel):
+    user_id: str
+    capture_type: str = "arkit_core"
+
+
+class VehicleConnectionRequest(BaseModel):
+    user_id: str
+    vehicle_type: str
+    make: str
+    model: str
+    year: int
+
+
+class FleetManagementRequest(BaseModel):
+    fleet_name: str
+    central_ai_id: str
+
+
+class AudioRecordingRequest(BaseModel):
+    user_id: str
+    audio_data: str
+    duration: float
+
+
+class PrincipalityRequest(BaseModel):
+    user_id: str
+    principality: str = "default"
+
+
+class RoboticConnectionRequest(BaseModel):
+    user_id: str
+    device_type: str
+    platform: str
+
+
+class MobileMirroringRequest(BaseModel):
+    user_id: str
+    device_platform: str
+    host_device: str
+
+
+class MotionCaptureRequest(BaseModel):
+    user_id: str
+    capture_type: str = "arkit_core"
+
+
+class VehicleConnectionRequest(BaseModel):
+    user_id: str
+    vehicle_type: str
+    make: str
+    model: str
+    year: int
+
+
+class FleetManagementRequest(BaseModel):
+    fleet_name: str
+    central_ai_id: str
+
+
+class AudioRecordingRequest(BaseModel):
+    user_id: str
+    audio_data: str
+    duration: float
+
+
+class RoboticConnectionRequest(BaseModel):
+    user_id: str
+    device_type: str
+    platform: str
+
+
+class MobileMirroringRequest(BaseModel):
+    user_id: str
+    device_platform: str
+    host_device: str
+
+
+class MotionCaptureRequest(BaseModel):
+    user_id: str
+    capture_type: str = "arkit_core"
+
+
+class VehicleConnectionRequest(BaseModel):
+    user_id: str
+    vehicle_type: str
+    make: str
+    model: str
+    year: int
+
+
+class FleetManagementRequest(BaseModel):
+    fleet_name: str
+    central_ai_id: str
+
+
+class AudioRecordingRequest(BaseModel):
+    user_id: str
+    audio_data: str
+    duration: float
+
+
 class IPSelfHealingSystem:
     def __init__(self):
         self.healing_history: List[Dict[str, Any]] = []
@@ -1278,6 +1412,173 @@ def evolution_genealogy_datasets():
     if not HAS_EVOLUTION:
         return {"error": "evolution_engine_unavailable"}
     return evolution_engine.get_genealogy_datasets()
+
+
+@app.post("/evolution/user-session")
+def evolution_user_session(body: UserSessionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_user_session(body.user_id, body.credential_data, body.individual_fields)
+    return asdict(result)
+
+
+@app.post("/evolution/state-markers/{user_id}")
+def evolution_state_markers(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.formulate_state_markers(user_id)
+    return asdict(result)
+
+
+@app.post("/evolution/future-prediction")
+def evolution_future_prediction(body: FuturePredictionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.predict_future_outcomes(body.user_id, body.time_horizon)
+    return asdict(result)
+
+
+@app.post("/evolution/model-protection/{user_id}")
+def evolution_model_protection(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.establish_model_protection(user_id)
+    return asdict(result)
+
+
+@app.post("/evolution/life-cycle/{user_id}")
+def evolution_life_cycle(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.manage_life_cycle(user_id)
+    return asdict(result)
+
+
+@app.post("/evolution/medical-assistance/{user_id}")
+def evolution_medical_assistance(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.provide_medical_assistance(user_id)
+    return asdict(result)
+
+
+@app.post("/evolution/law-support")
+def evolution_law_support(body: PrincipalityRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.provide_law_support(body.user_id, body.principality)
+    return asdict(result)
+
+
+@app.post("/evolution/principality-rejuvenation")
+def evolution_principality_rejuvenation(body: PrincipalityRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.establish_principality_rejuvenation(body.user_id, body.principality)
+    return asdict(result)
+
+
+@app.post("/evolution/operational-thresholds/{user_id}")
+def evolution_operational_thresholds(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.set_operational_thresholds(user_id)
+    return asdict(result)
+
+
+@app.post("/evolution/decay-management/{user_id}")
+def evolution_decay_management(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.manage_decay(user_id)
+    return asdict(result)
+
+
+@app.post("/evolution/affair-support")
+def evolution_affair_support(body: AffairSupportRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.provide_affair_support(body.user_id, body.affair_type)
+    return asdict(result)
+
+
+@app.get("/evolution/user-session-status/{user_id}")
+def evolution_user_session_status(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    return evolution_engine.get_user_session_status(user_id)
+
+
+@app.post("/evolution/robotic-connection")
+def evolution_robotic_connection(body: RoboticConnectionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_robotic_connection(body.user_id, body.device_type, body.platform)
+    return asdict(result)
+
+
+@app.post("/evolution/mobile-mirroring")
+def evolution_mobile_mirroring(body: MobileMirroringRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.setup_mobile_mirroring(body.user_id, body.device_platform, body.host_device)
+    return asdict(result)
+
+
+@app.post("/evolution/motion-capture")
+def evolution_motion_capture(body: MotionCaptureRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_motion_capture(body.user_id, body.capture_type)
+    return asdict(result)
+
+
+@app.post("/evolution/spatial-data-capture/{user_id}")
+def evolution_spatial_data_capture(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_spatial_data_capture(user_id)
+    return asdict(result)
+
+
+@app.post("/evolution/vehicle-connection")
+def evolution_vehicle_connection(body: VehicleConnectionRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.connect_vehicle(body.user_id, body.vehicle_type, body.make, body.model, body.year)
+    return asdict(result)
+
+
+@app.post("/evolution/fleet-management")
+def evolution_fleet_management(body: FleetManagementRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_fleet_management(body.fleet_name, body.central_ai_id)
+    return asdict(result)
+
+
+@app.post("/evolution/privacy-protection/{user_id}")
+def evolution_privacy_protection(user_id: str, protection_level: str = "high"):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.enable_privacy_protection(user_id, protection_level)
+    return asdict(result)
+
+
+@app.post("/evolution/audio-recording")
+def evolution_audio_recording(body: AudioRecordingRequest):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.record_audio(body.user_id, body.audio_data, body.duration)
+    return asdict(result)
+
+
+@app.post("/evolution/real-time-processing/{user_id}")
+def evolution_real_time_processing(user_id: str):
+    if not HAS_EVOLUTION:
+        return {"error": "evolution_engine_unavailable"}
+    result = evolution_engine.create_real_time_processing(user_id)
+    return asdict(result)
 
 
 if __name__ == "__main__":
