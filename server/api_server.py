@@ -1911,6 +1911,215 @@ def clear_session_data(session_id: str, body: Dict[str, Any] = Body(...)):
     return asdict(session_sharing.clear_server_data(session_id, participant_id))
 
 
+# ─── Streaming System ─────────────────────────────────────────────────────────
+
+try:
+    from qb_protocol.streaming import catalog, menu_fetcher, realm_detector, layer_detector, stream_mapper, streaming_integration
+    HAS_STREAMING = True
+except ImportError:
+    try:
+        from streaming import catalog, menu_fetcher, realm_detector, layer_detector, stream_mapper, streaming_integration
+        HAS_STREAMING = True
+    except ImportError:
+        HAS_STREAMING = False
+
+
+@app.get("/streaming/status")
+def streaming_status():
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return streaming_integration.get_status()
+
+
+@app.get("/streaming/realms")
+def get_realms():
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return catalog.get_realms()
+
+
+@app.post("/streaming/realms")
+def create_realm(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return streaming_integration.register_realm(
+        name=body.get("name", "Unknown Realm"),
+        realm_type=body.get("realm_type", "unknown"),
+        description=body.get("description", ""),
+        metadata=body.get("metadata"),
+    )
+
+
+@app.get("/streaming/realms/{realm_id}/layers")
+def get_layers(realm_id: str):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return catalog.get_layers(realm_id)
+
+
+@app.post("/streaming/realms/{realm_id}/layers")
+def create_layer(realm_id: str, body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    layer = catalog.create_layer(
+        realm_id=realm_id,
+        name=body.get("name", "Default Layer"),
+        layer_type=body.get("layer_type", "surface"),
+        depth=body.get("depth", 0),
+        metadata=body.get("metadata"),
+    )
+    return asdict(layer)
+
+
+@app.get("/streaming/realms/{realm_id}/sources")
+def get_stream_sources(realm_id: str, layer_id: Optional[str] = None):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return catalog.get_stream_sources(realm_id, layer_id)
+
+
+@app.post("/streaming/realms/{realm_id}/sources")
+def add_stream_source(realm_id: str, body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    layer_id = body.get("layer_id", "")
+    source = catalog.add_stream_source(
+        name=body.get("name", "Unknown Source"),
+        url=body.get("url", ""),
+        realm_id=realm_id,
+        layer_id=layer_id,
+        stream_type=body.get("stream_type", "video"),
+        quality=body.get("quality", "unknown"),
+        language=body.get("language", "en"),
+        metadata=body.get("metadata"),
+    )
+    return asdict(source)
+
+
+@app.get("/streaming/realms/{realm_id}/catalog")
+def get_catalog(realm_id: str, layer_id: Optional[str] = None, limit: int = 100):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return streaming_integration.get_catalog(realm_id, layer_id, limit)
+
+
+@app.post("/streaming/realms/{realm_id}/catalog")
+def add_catalog_item(realm_id: str, body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    layer_id = body.get("layer_id", "")
+    item = catalog.add_catalog_item(
+        title=body.get("title", "Unknown Title"),
+        realm_id=realm_id,
+        layer_id=layer_id,
+        stream_sources=body.get("stream_sources", []),
+        poster=body.get("poster", ""),
+        backdrop=body.get("backdrop", ""),
+        description=body.get("description", ""),
+        year=body.get("year", 0),
+        rating=body.get("rating", 0.0),
+        genres=body.get("genres", []),
+        metadata=body.get("metadata"),
+    )
+    return asdict(item)
+
+
+@app.post("/streaming/detect-realm")
+def detect_realm(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return streaming_integration.detect_realm(
+        name=body.get("name", ""),
+        url=body.get("url", ""),
+        description=body.get("description", ""),
+    )
+
+
+@app.post("/streaming/detect-layer")
+def detect_layer(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return streaming_integration.detect_layer(
+        realm_id=body.get("realm_id", ""),
+        name=body.get("name", ""),
+        url=body.get("url", ""),
+        description=body.get("description", ""),
+    )
+
+
+@app.post("/streaming/select-stream")
+def select_stream(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return streaming_integration.select_stream(
+        item_id=body.get("item_id", ""),
+        realm_id=body.get("realm_id", ""),
+        layer_id=body.get("layer_id", ""),
+        available_sources=body.get("available_sources", []),
+        preferences=body.get("preferences"),
+    )
+
+
+@app.get("/streaming/menu")
+def get_menu(category: Optional[str] = None, source: Optional[str] = None, limit: int = 100):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    items = menu_fetcher.get_items(category, source, limit)
+    return {"items": items, "count": len(items)}
+
+
+@app.post("/streaming/menu/fetch")
+def fetch_menu(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    source_id = body.get("source_id", "")
+    return streaming_integration.fetch_menu_from_source(source_id)
+
+
+@app.get("/streaming/menu/sources")
+def get_menu_sources():
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    return menu_fetcher.get_sources()
+
+
+@app.post("/streaming/menu/sources")
+def add_menu_source(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    source = menu_fetcher.register_source(
+        name=body.get("name", "Unknown Source"),
+        base_url=body.get("base_url", ""),
+        menu_selector=body.get("menu_selector", "nav"),
+        fallback_selector=body.get("fallback_selector", "ul.menu"),
+        enabled=body.get("enabled", True),
+        metadata=body.get("metadata"),
+    )
+    return asdict(source)
+
+
+@app.post("/streaming/grbl/convert")
+def streaming_grbl_convert(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    from qb_protocol.streaming import convert_grbl_text
+    text = body.get("text", "")
+    if not text:
+        return {"error": "text_required"}
+    return convert_grbl_text(text)
+
+
+@app.post("/streaming/grbl/to-python")
+def streaming_grbl_to_python(body: Dict[str, Any] = Body(...)):
+    if not HAS_STREAMING:
+        return {"error": "streaming_unavailable"}
+    from qb_protocol.streaming import grbl_to_python
+    text = body.get("text", "")
+    if not text:
+        return {"error": "text_required"}
+    return {"python_code": grbl_to_python(text)}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=17760)
